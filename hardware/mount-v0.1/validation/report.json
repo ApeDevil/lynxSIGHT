@@ -35,17 +35,17 @@
         "boundary_edges": 0,
         "degenerate_faces": 0,
         "bodies": 1,
-        "volume_cm3": 34.37
+        "volume_cm3": 29.24
       },
       "print": {
         "fits_bed": true,
         "size_mm": [
-          51.0,
+          41.0,
           44.5,
           43.5
         ],
         "steep_overhang_mm2": 0.0,
-        "bridge_mm2": 129.6
+        "bridge_mm2": 136.4
       }
     },
     "monitor_clamp_right": {
@@ -58,17 +58,17 @@
         "boundary_edges": 0,
         "degenerate_faces": 0,
         "bodies": 1,
-        "volume_cm3": 34.37
+        "volume_cm3": 29.24
       },
       "print": {
         "fits_bed": true,
         "size_mm": [
-          51.0,
+          41.0,
           44.5,
           43.5
         ],
         "steep_overhang_mm2": 0.0,
-        "bridge_mm2": 129.6
+        "bridge_mm2": 136.4
       }
     },
     "clamp_arm": {
@@ -81,13 +81,13 @@
         "boundary_edges": 0,
         "degenerate_faces": 0,
         "bodies": 1,
-        "volume_cm3": 13.68
+        "volume_cm3": 11.42
       },
       "print": {
         "fits_bed": true,
         "size_mm": [
           94.0,
-          73.5,
+          69.5,
           6.0
         ],
         "steep_overhang_mm2": 0.0,
@@ -104,12 +104,12 @@
         "boundary_edges": 0,
         "degenerate_faces": 0,
         "bodies": 1,
-        "volume_cm3": 35.53
+        "volume_cm3": 26.5
       },
       "print": {
         "fits_bed": true,
         "size_mm": [
-          40.0,
+          30.0,
           135.0,
           13.8
         ],
@@ -127,17 +127,17 @@
         "boundary_edges": 0,
         "degenerate_faces": 0,
         "bodies": 1,
-        "volume_cm3": 26.21
+        "volume_cm3": 20.39
       },
       "print": {
         "fits_bed": true,
         "size_mm": [
           56.0,
-          78.0,
+          68.0,
           8.0
         ],
         "steep_overhang_mm2": 0.0,
-        "bridge_mm2": 22.7
+        "bridge_mm2": 22.6
       }
     },
     "carriage_right": {
@@ -150,13 +150,13 @@
         "boundary_edges": 0,
         "degenerate_faces": 0,
         "bodies": 1,
-        "volume_cm3": 26.21
+        "volume_cm3": 20.39
       },
       "print": {
         "fits_bed": true,
         "size_mm": [
           56.0,
-          78.0,
+          68.0,
           8.0
         ],
         "steep_overhang_mm2": 0.6,
@@ -242,14 +242,14 @@
         "boundary_edges": 0,
         "degenerate_faces": 0,
         "bodies": 1,
-        "volume_cm3": 2.78
+        "volume_cm3": 1.53
       },
       "print": {
         "fits_bed": true,
         "size_mm": [
-          22.0,
-          22.0,
-          9.0
+          18.0,
+          18.0,
+          8.0
         ],
         "steep_overhang_mm2": 0.0,
         "bridge_mm2": 0.0
@@ -325,6 +325,53 @@
       }
     }
   },
+  "plates": {
+    "1-coupons.3mf": {
+      "parts": [
+        "coupon_pcb",
+        "coupon_rail",
+        "coupon_slider",
+        "knob"
+      ],
+      "fits_bed": true,
+      "extent_mm": [
+        155.5,
+        42.0,
+        22.0
+      ]
+    },
+    "2-mount.3mf": {
+      "parts": [
+        "rail",
+        "carriage_left",
+        "carriage_right",
+        "clamp_arm_1",
+        "clamp_arm_2",
+        "yoke_left",
+        "yoke_right",
+        "camera_holder_1",
+        "camera_holder_2",
+        "monitor_clamp_left",
+        "monitor_clamp_right",
+        "knob_1",
+        "knob_2",
+        "knob_3",
+        "knob_4",
+        "knob_5",
+        "knob_6",
+        "knob_7",
+        "knob_8",
+        "knob_9",
+        "knob_10"
+      ],
+      "fits_bed": true,
+      "extent_mm": [
+        245.5,
+        231.5,
+        53.0
+      ]
+    }
+  },
   "fasteners": {
     "ok": true,
     "bolt": "M4x16",
@@ -337,7 +384,7 @@
       "yaw": {
         "grip": 11.0,
         "engagement": 3.2,
-        "tip_room": 15.6
+        "tip_room": 16.6
       },
       "pitch": {
         "grip": 11.6,
@@ -361,7 +408,7 @@
     "carriage_on_rail_at_max_baseline_mm": 0.0,
     "lock_bolt_in_slot_at_max_baseline_mm": 8.75,
     "standoffs_clear_rear_parts_mm": 2.0,
-    "yaw_knob_clear_of_foot_mm": 15.6,
+    "yaw_knob_clear_of_foot_mm": 16.6,
     "optical_axis_above_support_surface_mm": 79.0,
     "monitor_depth_range_mm": [
       12.5,
@@ -435,16 +482,6 @@
       "fov_occlusions": [
         {
           "camera": "left",
-          "part": "carriage_right",
-          "pose": "desk, baseline 70, left yaw +20 pitch -25, right yaw +20 pitch -25"
-        },
-        {
-          "camera": "right",
-          "part": "carriage_left",
-          "pose": "desk, baseline 70, left yaw +20 pitch -25, right yaw +20 pitch -25"
-        },
-        {
-          "camera": "left",
           "part": "clamp_arm_left",
           "pose": "monitor 12.5 mm deep, baseline 70, left yaw -25 pitch -25, right yaw -25 pitch -25"
         },
@@ -452,16 +489,6 @@
           "camera": "right",
           "part": "clamp_arm_right",
           "pose": "monitor 12.5 mm deep, baseline 70, left yaw -25 pitch -25, right yaw -25 pitch -25"
-        },
-        {
-          "camera": "left",
-          "part": "carriage_right",
-          "pose": "monitor 12.5 mm deep, baseline 70, left yaw +20 pitch -25, right yaw +20 pitch -25"
-        },
-        {
-          "camera": "right",
-          "part": "carriage_left",
-          "pose": "monitor 12.5 mm deep, baseline 70, left yaw +20 pitch -25, right yaw +20 pitch -25"
         },
         {
           "camera": "left",

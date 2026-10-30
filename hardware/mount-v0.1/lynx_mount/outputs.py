@@ -47,13 +47,18 @@ def print_matrix(ob, rotation):
     return Matrix.Translation(shift) @ rotation
 
 
-def write_stl(path, ob, matrix):
-    """Binary STL in millimetres."""
+def print_mesh(ob, matrix):
+    """(vertices, triangles) of a part transformed into its print orientation."""
     me = ob.data
     me.calc_loop_triangles()
     M = np.array(matrix)
     vs = np.array([v.co[:] for v in me.vertices]) @ M[:3, :3].T + M[:3, 3]
     tris = np.array([t.vertices[:] for t in me.loop_triangles])
+    return vs, tris
+
+
+def write_stl(path, vs, tris):
+    """Binary STL in millimetres."""
     a, b, c = vs[tris[:, 0]], vs[tris[:, 1]], vs[tris[:, 2]]
     n = np.cross(b - a, c - a)
     n /= np.maximum(np.linalg.norm(n, axis=1, keepdims=True), 1e-12)

@@ -75,6 +75,7 @@ class Fasteners:
 class Print:
     bed_xyz: tuple = (256.0, 256.0, 256.0)  # Bambu Lab P2S build volume (manufacturer spec)
     bed_margin: float = 5.0  # keep parts this far inside each edge
+    plate_gap: float = 8.0  # between parts on a ready-arranged plate, room for brims and removal
     sliding_clearance: float = 0.15  # FIT, per side, keys in slots
     rotating_gap: float = 0.5  # holder wall to yoke arm, before the knob is tightened
     max_overhang_deg: float = 45.0
@@ -137,15 +138,16 @@ class Mount:
     tunnel_width: float = 7.4  # > nut AF 7.0, < corners 8.08: the nut slides but cannot spin
     tunnel_height: float = 4.5
     key_channel: tuple = (12.0, 4.0)  # width, height of the groove under the rail that keys the brackets
-    rail_axis_z: float = -40.0  # rail centre behind the yaw axes (yaw-axis Z = 0)
+    rail_axis_z: float = -30.0  # rail centre behind the yaw axes (yaw-axis Z = 0); the yaw knob under
+    # the carriage clears the rail's front face, and the lock knobs clear the yoke disk
     scale_strip: float = 6.0  # rail top left visible behind the carriage
 
     # --- brackets: one under each rail end, either a desk foot or a monitor clamp.
     # Both share the saddle: a block the rail sits on, keyed into the rail's groove and
     # held by one M4 bolt from below into a nut pressed into the groove ceiling.
-    bracket_width: float = 40.0  # along X; the bracket ends flush with the rail end
+    bracket_width: float = 30.0  # along X; the bracket ends flush with the rail end
     saddle_thickness: float = 10.0
-    saddle_z: tuple = (-60.0, -18.0)  # saddle extent along rig Z (rail spans -54..-26)
+    saddle_z: tuple = (-50.0, -8.0)  # saddle extent along rig Z (rail spans -44..-16)
     saddle_head_pocket: float = 3.0
     rail_nut_pocket: float = 3.4
     bracket_blind_hole: float = 3.0  # bolt hole continuing above the rail nut pocket
@@ -154,23 +156,23 @@ class Mount:
     foot_thickness: float = 5.0
 
     # --- monitor clamp (rig frame; the monitor's front face is a plane z = monitor_front_z)
-    monitor_front_z: float = -22.0  # inner face of the front lip, felt pad included
+    monitor_front_z: float = -12.0  # inner face of the front lip, felt pad included
     felt_thickness: float = 1.5  # self-adhesive felt on every face touching the monitor
     lip_thickness: float = 4.0
     lip_drop: float = 12.0  # how far the lip reaches down over the front bezel
-    clamp_bolt_z: float = -30.0  # rear-arm bolt, behind the lip
+    clamp_bolt_z: float = -20.0  # rear-arm bolt, behind the lip
     clamp_ear: float = 11.0  # block beyond the rail end, up to the rail top, that takes the arm bolt
     clamp_nut_inset: float = 3.0  # skin between the ear's outer face and its drop-in nut slot
     clamp_knob_clearance: float = 2.0  # arm knob above the monitor's top surface
     arm_plate: float = 6.0  # rear arm thickness along X
-    arm_bar_height: float = 22.0
+    arm_bar_height: float = 18.0
     arm_slot: tuple = (6.0, 68.0)  # slot along the bar, measured forward from the leg's inner face
     arm_leg_drop: float = 50.0  # leg length below the monitor top
     arm_bar_front: float = 84.0  # bar length forward of the leg's inner face; carries the depth scale
 
     # --- knob
-    knob_diameter: float = 22.0
-    knob_height: float = 9.0
+    knob_diameter: float = 18.0
+    knob_height: float = 8.0
     knob_pocket_depth: float = 2.6  # < head and nut, so the steel bears, not the knob
     knob_lobes: int = 8
 
