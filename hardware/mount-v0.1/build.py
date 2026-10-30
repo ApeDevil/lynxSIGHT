@@ -40,8 +40,11 @@ def build_parts(p: Mount):
         "yoke_left": parts.yoke(p, "left"),
         "yoke_right": parts.yoke(p, "right"),
         "camera_holder": parts.holder(p),
-        "knob": parts.knob(p),
+        "pcb_keeper": parts.pcb_keeper(p),
+        **{f"screw_{j}": parts.screw(p, j) for j in parts.SCREWS},
+        "nut": parts.nut(p),
         "coupon_pcb": parts.coupon_pcb(p),
+        "coupon_thread": parts.coupon_thread(p),
         "coupon_rail": parts.coupon_rail(p),
         "coupon_slider": parts.coupon_slider(p),
     }
@@ -138,7 +141,11 @@ def main(argv):
     report["plates"] = write_plates(p, meshes)
     report["fasteners"] = validate.check_fasteners(p)
     report["ranges"] = validate.check_ranges(p)
-    report["assembly"] = validate.check_assembly(p, built, refs, fov, monitors)
+    # Screws enter the collision checks on plain shanks (see parts.screw).
+    proxies = {f"screw_{j}": parts.screw(p, j, proxy=True) for j in parts.SCREWS}
+    report["assembly"] = validate.check_assembly(p, {**built, **proxies}, refs, fov, monitors)
+    for ob in proxies.values():
+        bpy.data.meshes.remove(ob.data)
 
     failures = [f"mesh:{k}" for k, v in report["parts"].items() if not v["mesh"]["ok"]]
     failures += [f"bed:{k}" for k, v in report["parts"].items() if not v["print"]["fits_bed"]]

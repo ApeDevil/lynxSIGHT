@@ -12,14 +12,16 @@ import zipfile
 
 import numpy as np
 
-# Printed in this order: the fit coupons with a knob first, then the whole monitor rig.
-# The rig plate holds every rig part in its outputs.PRINTS quantity (the build checks it).
-# Desk feet are an option and stay single files.
+# Printed in this order: the fit coupons with the fasteners to try on them first, then
+# the whole monitor rig. The rig plates hold every rig part in its outputs.PRINTS
+# quantity (the build checks it). Desk feet are an option and stay single files.
 PLATE_SETS = {
-    "1-coupons": {"coupon_pcb": 1, "coupon_rail": 1, "coupon_slider": 1, "knob": 1},
+    "1-coupons": {"coupon_pcb": 1, "coupon_rail": 1, "coupon_slider": 1, "coupon_thread": 1,
+                  "pcb_keeper": 1, "screw_rail_lock": 1, "screw_bracket": 1, "nut": 2},
     "2-mount": {"rail": 1, "monitor_clamp_left": 1, "monitor_clamp_right": 1, "clamp_arm": 2,
                 "carriage_left": 1, "carriage_right": 1, "yoke_left": 1, "yoke_right": 1,
-                "camera_holder": 2, "knob": 10},
+                "camera_holder": 2, "pcb_keeper": 2, "screw_rail_lock": 4, "screw_yaw": 2,
+                "screw_pitch": 2, "screw_clamp": 2, "screw_bracket": 2, "nut": 8},
 }
 
 

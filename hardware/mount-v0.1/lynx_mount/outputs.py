@@ -20,18 +20,25 @@ _UP_X = Matrix.Rotation(-math.pi / 2, 4, "Y")                # rig +X up (lying 
 
 PRINTS = {
     # part: (print rotation, quantity, why this orientation)
-    "rail": (_UP_Y, 1, "underside on the bed; the tunnel, key groove and nut pockets print as short bridges"),
+    "rail": (_UP_Y, 1, "underside on the bed; the tunnel and key groove print as short bridges, the bracket threads stand vertical"),
     "monitor_clamp_left": (_UP_NEG_Z, 1, "front face of the lip on the bed; the key boss has a 45-degree back"),
     "monitor_clamp_right": (_UP_NEG_Z, 1, "front face of the lip on the bed; the key boss has a 45-degree back"),
     "clamp_arm": (_UP_X, 2, "flat on its side, depth scale up"),
     "desk_foot": (_UP_Y, 2, "pad on the bed (only for desk use, instead of the monitor clamps)"),
     "carriage_left": (_UP_NEG_Y, 1, "upside down: the key points up and the top face with the yaw scale lies on the bed"),
     "carriage_right": (_UP_NEG_Y, 1, "upside down: the key points up and the top face with the yaw scale lies on the bed"),
-    "yoke_left": (_UP_Y, 1, "base on the bed; the pitch hole is a teardrop pointing up"),
-    "yoke_right": (_UP_Y, 1, "base on the bed; the pitch hole is a teardrop pointing up"),
+    "yoke_left": (_UP_Y, 1, "base on the bed, so the yaw thread stands vertical; the pitch hole is a teardrop pointing up"),
+    "yoke_right": (_UP_Y, 1, "base on the bed, so the yaw thread stands vertical; the pitch hole is a teardrop pointing up"),
     "camera_holder": (_UP_Z, 2, "rear plate on the bed; fins have 45-degree undersides, pitch hole is a teardrop"),
-    "knob": (_UP_Z, 10, "hex pocket up"),
+    "pcb_keeper": (_UP_NEG_Y, 2, "bar flat on the bed, pegs and tongue up"),
+    "screw_rail_lock": (_UP_Z, 4, "head down, thread standing vertical"),
+    "screw_yaw": (_UP_Z, 2, "head down, thread standing vertical"),
+    "screw_pitch": (_UP_Z, 2, "head down, thread standing vertical"),
+    "screw_clamp": (_UP_Z, 2, "head down, thread standing vertical"),
+    "screw_bracket": (_UP_Z, 2, "head down, thread standing vertical"),
+    "nut": (_UP_Z, 8, "flat; 4 for the rail locks, 2 for pitch, 2 for the clamp arms"),
     "coupon_pcb": (_UP_Z, 1, "as the holder"),
+    "coupon_thread": (_UP_Z, 1, "as printed: one vertical threaded hole, one horizontal hole with a nut pocket"),
     "coupon_rail": (_UP_Y, 1, "as the rail"),
     "coupon_slider": (_UP_NEG_Y, 1, "as the carriage"),
 }
@@ -72,7 +79,8 @@ def write_stl(path, vs, tris):
 # ------------------------------------------------------------------ scene
 COLOURS = {
     "base": (0.12, 0.12, 0.13, 1), "carriage": (0.85, 0.42, 0.10, 1), "yoke": (0.18, 0.40, 0.75, 1),
-    "camera_holder": (0.80, 0.80, 0.78, 1), "knob": (0.05, 0.05, 0.05, 1), "coupon": (0.55, 0.70, 0.35, 1),
+    "camera_holder": (0.80, 0.80, 0.78, 1), "screw": (0.05, 0.05, 0.05, 1), "nut": (0.05, 0.05, 0.05, 1),
+    "pcb_keeper": (0.80, 0.80, 0.78, 1), "coupon": (0.55, 0.70, 0.35, 1),
     "ref_pcb": (0.05, 0.35, 0.15, 1), "ref_lens": (0.02, 0.02, 0.02, 1), "ref_rear_parts": (0.6, 0.55, 0.2, 1),
     "ref_connector": (0.9, 0.9, 0.9, 1), "ref_monitor": (0.08, 0.08, 0.09, 1),
     "monitor_clamp": (0.85, 0.42, 0.10, 1), "clamp_arm": (0.18, 0.40, 0.75, 1), "desk_foot": (0.12, 0.12, 0.13, 1),
@@ -166,12 +174,26 @@ def build_scene(p: Mount, parts, refs, fov, monitor, pose, explode_offset=(420.0
     for name, (key, M, group) in asm.instance_matrices(p, zero).items():
         layer = group.split(".")[-1]
         lift = asm.EXPLODE.get("holder" if layer == "holder" else layer, Matrix.Identity(4))
-        if key == "knob":
-            lift = lift @ Matrix.Translation((0, 14 if "rail_lock" in name else -14 if "yaw" in name else 0, 0))
-            if "pitch" in name:
-                lift = asm.EXPLODE["yoke"] @ Matrix.Translation((18 if "right" in name else -18, 0, 0))
-            if "clamp" in name:
-                lift = Matrix.Translation((36 if "right" in name else -36, -30, -25))
+        out = 1 if "right" in name else -1
+        T = Matrix.Translation
+        if key.startswith("screw_rail_lock"):
+            lift = lift @ T((0, 22, 0))
+        elif key == "screw_yaw":
+            lift = lift @ T((0, -20, 0))
+        elif key == "screw_pitch":
+            lift = asm.EXPLODE["yoke"] @ T((20 * out, 0, 0))
+        elif key == "nut" and "pitch" in name:
+            lift = lift @ T((-12 * out, 0, 0))
+        elif key == "nut" and "rail_lock" in name:
+            lift = Matrix.Identity(4)  # stays in the rail's tunnel
+        elif key == "pcb_keeper":
+            lift = lift @ T((0, 15, 0))
+        elif key == "screw_clamp":
+            lift = T((40 * out, -30, -25))
+        elif key == "nut" and "clamp" in name:
+            lift = T((0, -5, 0))
+        elif key == "screw_bracket":
+            lift = T((0, -50, 0))
         if key == "monitor_clamp":
             lift = Matrix.Translation((0, -30, 0))
         if key == "clamp_arm":

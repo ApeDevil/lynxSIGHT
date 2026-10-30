@@ -5,7 +5,7 @@
 - fit:       the camera reference model sits in the holder without overlap
 - motion:    no part collides with another across the adjustment ranges
 - access:    the connector/cable keep-out and the field of view stay clear
-- fasteners: every M4 joint has full thread engagement and room for the bolt tip
+- fasteners: every printed screw engages enough thread and has room for its tip
 - ranges:    baseline, yaw and pitch limits are reachable on the rail and scales
 """
 
@@ -223,8 +223,9 @@ def _pose_str(pose):
 # ------------------------------------------------------------------ parameter checks
 def check_fasteners(p: Mount):
     stacks = fastener_stacks(p)
-    ok = all(s["engagement"] >= p.fasteners.min_thread_engagement and s["tip_room"] >= 0 for s in stacks.values())
-    return dict(ok=ok, bolt=f"M4x{p.fasteners.m4_bolt_length:g}",
+    f = p.fasteners
+    ok = all(s["engagement"] >= f.min_engagement and s["tip_room"] >= 0 for s in stacks.values())
+    return dict(ok=ok, thread=f"printed {f.major:g} mm, pitch {f.pitch:g}, 45-degree flanks",
                 joints={k: {kk: round(vv, 2) for kk, vv in v.items()} for k, v in stacks.items()})
 
 
@@ -235,9 +236,10 @@ def check_ranges(p: Mount):
     findings = {
         "carriages_clear_at_min_baseline_mm": round(p.baseline_min - p.carriage_width, 2),
         "carriage_on_rail_at_max_baseline_mm": round(L - (p.baseline_max / 2 + half), 2),
-        "lock_bolt_in_slot_at_max_baseline_mm": round(slot_end - (p.baseline_max / 2 + p.lock_bolt_offset) - p.fasteners.m4_clearance / 2, 2),
+        "lock_bolt_in_slot_at_max_baseline_mm": round(slot_end - (p.baseline_max / 2 + p.lock_bolt_offset) - p.fasteners.shank_clearance / 2, 2),
         "standoffs_clear_rear_parts_mm": round(p.standoff_height - p.camera.rear_component_height.value, 2),
-        "yaw_knob_clear_of_foot_mm": round(fastener_stacks(p)["yaw"]["tip_room"], 2),
+        "yaw_knob_clear_of_foot_mm": round(p.rail_top_y - asm.SEAT - p.knob_height
+                                           - (p.surface_y + p.foot_thickness), 2),
         "optical_axis_above_support_surface_mm": round(-p.surface_y, 1),
         "monitor_depth_range_mm": [round(v, 1) for v in p.monitor_depth_range],
         "baseline_scale_ticks": [b for b, _ in p.baseline_ticks()],

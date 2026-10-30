@@ -11,12 +11,22 @@ from lynx_mount.plates import pack, place  # noqa: E402
 
 
 class FastenerStacks(unittest.TestCase):
-    def test_every_joint_fully_engages_its_nut(self):
+    def test_every_screw_engages_enough_thread(self):
         for name, s in fastener_stacks(DEFAULT).items():
             with self.subTest(joint=name):
-                self.assertGreaterEqual(s["engagement"], DEFAULT.fasteners.min_thread_engagement)
+                self.assertGreaterEqual(s["engagement"], DEFAULT.fasteners.min_engagement)
 
-    def test_no_bolt_tip_hits_a_part(self):
+    def test_thread_flanks_print_without_support(self):
+        f = DEFAULT.fasteners
+        flank = (1 - f.crest - f.root) / 2 * f.pitch
+        self.assertGreaterEqual(flank, f.depth - 1e-9)  # at most 45 degrees from vertical
+
+    def test_screw_passes_its_clearance_holes(self):
+        f = DEFAULT.fasteners
+        self.assertGreater(f.shank_clearance, f.major)
+        self.assertLessEqual(f.shank_clearance, DEFAULT.slot_width)
+
+    def test_no_screw_tip_hits_a_part(self):
         for name, s in fastener_stacks(DEFAULT).items():
             with self.subTest(joint=name):
                 self.assertGreaterEqual(s["tip_room"], 0.0)
@@ -53,8 +63,8 @@ class Ranges(unittest.TestCase):
 
     def test_tunnel_holds_a_nut_without_letting_it_spin(self):
         f = self.p.fasteners
-        corners = f.m4_nut_af / (3 ** 0.5 / 2)
-        self.assertGreater(self.p.tunnel_width, f.m4_nut_af)
+        corners = f.nut_af / (3 ** 0.5 / 2)
+        self.assertGreater(self.p.tunnel_width, f.nut_af)
         self.assertLess(self.p.tunnel_width, corners)
 
     def test_angle_scales_are_symmetric(self):

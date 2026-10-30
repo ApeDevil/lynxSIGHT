@@ -4,7 +4,7 @@
   "parts": {
     "rail": {
       "quantity": 1,
-      "orientation": "underside on the bed; the tunnel, key groove and nut pockets print as short bridges",
+      "orientation": "underside on the bed; the tunnel and key groove print as short bridges, the bracket threads stand vertical",
       "stl": "stl/rail.stl",
       "mesh": {
         "ok": true,
@@ -12,17 +12,17 @@
         "boundary_edges": 0,
         "degenerate_faces": 0,
         "bodies": 1,
-        "volume_cm3": 109.45
+        "volume_cm3": 103.53
       },
       "print": {
         "fits_bed": true,
         "size_mm": [
           216.0,
           28.0,
-          22.0
+          24.0
         ],
         "steep_overhang_mm2": 27.5,
-        "bridge_mm2": 3275.9
+        "bridge_mm2": 3489.9
       }
     },
     "monitor_clamp_left": {
@@ -35,17 +35,17 @@
         "boundary_edges": 0,
         "degenerate_faces": 0,
         "bodies": 1,
-        "volume_cm3": 29.24
+        "volume_cm3": 26.67
       },
       "print": {
         "fits_bed": true,
         "size_mm": [
           41.0,
-          44.5,
+          46.5,
           43.5
         ],
         "steep_overhang_mm2": 0.0,
-        "bridge_mm2": 136.4
+        "bridge_mm2": 236.2
       }
     },
     "monitor_clamp_right": {
@@ -58,17 +58,17 @@
         "boundary_edges": 0,
         "degenerate_faces": 0,
         "bodies": 1,
-        "volume_cm3": 29.24
+        "volume_cm3": 26.67
       },
       "print": {
         "fits_bed": true,
         "size_mm": [
           41.0,
-          44.5,
+          46.5,
           43.5
         ],
         "steep_overhang_mm2": 0.0,
-        "bridge_mm2": 136.4
+        "bridge_mm2": 236.2
       }
     },
     "clamp_arm": {
@@ -81,13 +81,13 @@
         "boundary_edges": 0,
         "degenerate_faces": 0,
         "bodies": 1,
-        "volume_cm3": 11.42
+        "volume_cm3": 10.68
       },
       "print": {
         "fits_bed": true,
         "size_mm": [
           94.0,
-          69.5,
+          71.5,
           6.0
         ],
         "steep_overhang_mm2": 0.0,
@@ -104,7 +104,7 @@
         "boundary_edges": 0,
         "degenerate_faces": 0,
         "bodies": 1,
-        "volume_cm3": 26.5
+        "volume_cm3": 25.2
       },
       "print": {
         "fits_bed": true,
@@ -114,7 +114,7 @@
           13.8
         ],
         "steep_overhang_mm2": 0.0,
-        "bridge_mm2": 29.2
+        "bridge_mm2": 163.3
       }
     },
     "carriage_left": {
@@ -127,7 +127,7 @@
         "boundary_edges": 0,
         "degenerate_faces": 0,
         "bodies": 1,
-        "volume_cm3": 20.39
+        "volume_cm3": 19.88
       },
       "print": {
         "fits_bed": true,
@@ -150,7 +150,7 @@
         "boundary_edges": 0,
         "degenerate_faces": 0,
         "bodies": 1,
-        "volume_cm3": 20.39
+        "volume_cm3": 19.88
       },
       "print": {
         "fits_bed": true,
@@ -165,7 +165,7 @@
     },
     "yoke_left": {
       "quantity": 1,
-      "orientation": "base on the bed; the pitch hole is a teardrop pointing up",
+      "orientation": "base on the bed, so the yaw thread stands vertical; the pitch hole is a teardrop pointing up",
       "stl": "stl/yoke_left.stl",
       "mesh": {
         "ok": true,
@@ -173,12 +173,12 @@
         "boundary_edges": 0,
         "degenerate_faces": 0,
         "bodies": 1,
-        "volume_cm3": 22.87
+        "volume_cm3": 22.56
       },
       "print": {
         "fits_bed": true,
         "size_mm": [
-          63.0,
+          64.3,
           44.0,
           52.99
         ],
@@ -188,7 +188,7 @@
     },
     "yoke_right": {
       "quantity": 1,
-      "orientation": "base on the bed; the pitch hole is a teardrop pointing up",
+      "orientation": "base on the bed, so the yaw thread stands vertical; the pitch hole is a teardrop pointing up",
       "stl": "stl/yoke_right.stl",
       "mesh": {
         "ok": true,
@@ -196,12 +196,12 @@
         "boundary_edges": 0,
         "degenerate_faces": 0,
         "bodies": 1,
-        "volume_cm3": 22.87
+        "volume_cm3": 22.56
       },
       "print": {
         "fits_bed": true,
         "size_mm": [
-          63.0,
+          64.3,
           44.0,
           52.99
         ],
@@ -219,37 +219,175 @@
         "boundary_edges": 0,
         "degenerate_faces": 0,
         "bodies": 1,
-        "volume_cm3": 16.3
+        "volume_cm3": 18.47
       },
       "print": {
         "fits_bed": true,
         "size_mm": [
-          64.0,
+          66.6,
           42.0,
           31.6
         ],
         "steep_overhang_mm2": 0.0,
-        "bridge_mm2": 73.3
+        "bridge_mm2": 191.4
       }
     },
-    "knob": {
-      "quantity": 10,
-      "orientation": "hex pocket up",
-      "stl": "stl/knob.stl",
+    "pcb_keeper": {
+      "quantity": 2,
+      "orientation": "bar flat on the bed, pegs and tongue up",
+      "stl": "stl/pcb_keeper.stl",
       "mesh": {
         "ok": true,
         "non_manifold_edges": 0,
         "boundary_edges": 0,
         "degenerate_faces": 0,
         "bodies": 1,
-        "volume_cm3": 1.53
+        "volume_cm3": 0.94
+      },
+      "print": {
+        "fits_bed": true,
+        "size_mm": [
+          53.1,
+          6.0,
+          7.0
+        ],
+        "steep_overhang_mm2": 0.0,
+        "bridge_mm2": 0.0
+      }
+    },
+    "screw_rail_lock": {
+      "quantity": 4,
+      "orientation": "head down, thread standing vertical",
+      "stl": "stl/screw_rail_lock.stl",
+      "mesh": {
+        "ok": true,
+        "non_manifold_edges": 0,
+        "boundary_edges": 0,
+        "degenerate_faces": 0,
+        "bodies": 1,
+        "volume_cm3": 2.46
       },
       "print": {
         "fits_bed": true,
         "size_mm": [
           18.0,
           18.0,
-          8.0
+          25.5
+        ],
+        "steep_overhang_mm2": 0.0,
+        "bridge_mm2": 0.0
+      }
+    },
+    "screw_yaw": {
+      "quantity": 2,
+      "orientation": "head down, thread standing vertical",
+      "stl": "stl/screw_yaw.stl",
+      "mesh": {
+        "ok": true,
+        "non_manifold_edges": 0,
+        "boundary_edges": 0,
+        "degenerate_faces": 0,
+        "bodies": 1,
+        "volume_cm3": 2.29
+      },
+      "print": {
+        "fits_bed": true,
+        "size_mm": [
+          18.0,
+          18.0,
+          21.5
+        ],
+        "steep_overhang_mm2": 0.0,
+        "bridge_mm2": 0.0
+      }
+    },
+    "screw_pitch": {
+      "quantity": 2,
+      "orientation": "head down, thread standing vertical",
+      "stl": "stl/screw_pitch.stl",
+      "mesh": {
+        "ok": true,
+        "non_manifold_edges": 0,
+        "boundary_edges": 0,
+        "degenerate_faces": 0,
+        "bodies": 1,
+        "volume_cm3": 2.41
+      },
+      "print": {
+        "fits_bed": true,
+        "size_mm": [
+          18.0,
+          18.0,
+          24.3
+        ],
+        "steep_overhang_mm2": 0.0,
+        "bridge_mm2": 0.0
+      }
+    },
+    "screw_clamp": {
+      "quantity": 2,
+      "orientation": "head down, thread standing vertical",
+      "stl": "stl/screw_clamp.stl",
+      "mesh": {
+        "ok": true,
+        "non_manifold_edges": 0,
+        "boundary_edges": 0,
+        "degenerate_faces": 0,
+        "bodies": 1,
+        "volume_cm3": 2.34
+      },
+      "print": {
+        "fits_bed": true,
+        "size_mm": [
+          18.0,
+          18.0,
+          22.5
+        ],
+        "steep_overhang_mm2": 0.0,
+        "bridge_mm2": 0.0
+      }
+    },
+    "screw_bracket": {
+      "quantity": 2,
+      "orientation": "head down, thread standing vertical",
+      "stl": "stl/screw_bracket.stl",
+      "mesh": {
+        "ok": true,
+        "non_manifold_edges": 0,
+        "boundary_edges": 0,
+        "degenerate_faces": 0,
+        "bodies": 1,
+        "volume_cm3": 1.26
+      },
+      "print": {
+        "fits_bed": true,
+        "size_mm": [
+          15.0,
+          15.0,
+          20.2
+        ],
+        "steep_overhang_mm2": 0.0,
+        "bridge_mm2": 23.6
+      }
+    },
+    "nut": {
+      "quantity": 8,
+      "orientation": "flat; 4 for the rail locks, 2 for pitch, 2 for the clamp arms",
+      "stl": "stl/nut.stl",
+      "mesh": {
+        "ok": true,
+        "non_manifold_edges": 0,
+        "boundary_edges": 0,
+        "degenerate_faces": 0,
+        "bodies": 1,
+        "volume_cm3": 0.58
+      },
+      "print": {
+        "fits_bed": true,
+        "size_mm": [
+          13.0,
+          15.01,
+          6.0
         ],
         "steep_overhang_mm2": 0.0,
         "bridge_mm2": 0.0
@@ -265,17 +403,40 @@
         "boundary_edges": 0,
         "degenerate_faces": 0,
         "bodies": 1,
-        "volume_cm3": 5.99
+        "volume_cm3": 11.9
       },
       "print": {
         "fits_bed": true,
         "size_mm": [
-          53.0,
+          55.6,
           42.0,
-          16.0
+          13.35
         ],
         "steep_overhang_mm2": 0.0,
-        "bridge_mm2": 59.0
+        "bridge_mm2": 96.2
+      }
+    },
+    "coupon_thread": {
+      "quantity": 1,
+      "orientation": "as printed: one vertical threaded hole, one horizontal hole with a nut pocket",
+      "stl": "stl/coupon_thread.stl",
+      "mesh": {
+        "ok": true,
+        "non_manifold_edges": 0,
+        "boundary_edges": 0,
+        "degenerate_faces": 0,
+        "bodies": 1,
+        "volume_cm3": 4.11
+      },
+      "print": {
+        "fits_bed": true,
+        "size_mm": [
+          24.5,
+          20.0,
+          18.0
+        ],
+        "steep_overhang_mm2": 0.0,
+        "bridge_mm2": 47.6
       }
     },
     "coupon_rail": {
@@ -288,17 +449,17 @@
         "boundary_edges": 0,
         "degenerate_faces": 0,
         "bodies": 1,
-        "volume_cm3": 15.2
+        "volume_cm3": 14.41
       },
       "print": {
         "fits_bed": true,
         "size_mm": [
           30.0,
           28.0,
-          22.0
+          24.0
         ],
         "steep_overhang_mm2": 0.0,
-        "bridge_mm2": 476.4
+        "bridge_mm2": 488.0
       }
     },
     "coupon_slider": {
@@ -311,7 +472,7 @@
         "boundary_edges": 0,
         "degenerate_faces": 0,
         "bodies": 1,
-        "volume_cm3": 4.09
+        "volume_cm3": 3.93
       },
       "print": {
         "fits_bed": true,
@@ -331,13 +492,18 @@
         "coupon_pcb",
         "coupon_rail",
         "coupon_slider",
-        "knob"
+        "coupon_thread",
+        "pcb_keeper",
+        "screw_rail_lock",
+        "screw_bracket",
+        "nut_1",
+        "nut_2"
       ],
       "fits_bed": true,
       "extent_mm": [
-        155.5,
+        243.5,
         42.0,
-        22.0
+        25.5
       ]
     },
     "2-mount.3mf": {
@@ -345,71 +511,88 @@
         "rail",
         "carriage_left",
         "carriage_right",
+        "yoke_right",
+        "yoke_left",
         "clamp_arm_1",
         "clamp_arm_2",
-        "yoke_left",
-        "yoke_right",
         "camera_holder_1",
         "camera_holder_2",
         "monitor_clamp_left",
         "monitor_clamp_right",
-        "knob_1",
-        "knob_2",
-        "knob_3",
-        "knob_4",
-        "knob_5",
-        "knob_6",
-        "knob_7",
-        "knob_8",
-        "knob_9",
-        "knob_10"
+        "pcb_keeper_1",
+        "pcb_keeper_2",
+        "screw_rail_lock_1",
+        "screw_rail_lock_2",
+        "screw_rail_lock_3",
+        "screw_rail_lock_4",
+        "screw_yaw_1",
+        "screw_yaw_2",
+        "screw_pitch_1",
+        "screw_pitch_2",
+        "screw_clamp_1",
+        "screw_clamp_2",
+        "screw_bracket_1",
+        "screw_bracket_2",
+        "nut_1",
+        "nut_2",
+        "nut_3",
+        "nut_4",
+        "nut_5",
+        "nut_6",
+        "nut_7",
+        "nut_8"
       ],
       "fits_bed": true,
       "extent_mm": [
-        245.5,
-        231.5,
+        245.0,
+        233.0,
         53.0
       ]
     }
   },
   "fasteners": {
     "ok": true,
-    "bolt": "M4x16",
+    "thread": "printed 8 mm, pitch 2, 45-degree flanks",
     "joints": {
       "rail_lock": {
+        "length": 17.5,
         "grip": 12.0,
-        "engagement": 3.2,
-        "tip_room": 0.5
+        "engagement": 5.5,
+        "tip_room": 1.1
       },
       "yaw": {
-        "grip": 11.0,
-        "engagement": 3.2,
-        "tip_room": 16.6
+        "length": 13.5,
+        "grip": 6.0,
+        "engagement": 7.5,
+        "tip_room": 0.5
       },
       "pitch": {
-        "grip": 11.6,
-        "engagement": 3.2,
-        "tip_room": 11.75
-      },
-      "bracket_to_rail": {
+        "length": 16.3,
         "grip": 10.8,
-        "engagement": 3.2,
-        "tip_room": 1.2
+        "engagement": 5.5,
+        "tip_room": 0.7
       },
-      "clamp_arm": {
+      "bracket": {
+        "length": 16.2,
+        "grip": 9.3,
+        "engagement": 6.9,
+        "tip_room": 0.5
+      },
+      "clamp": {
+        "length": 14.5,
         "grip": 9.0,
-        "engagement": 3.2,
-        "tip_room": 1.0
+        "engagement": 5.5,
+        "tip_room": 2.1
       }
     }
   },
   "ranges": {
     "carriages_clear_at_min_baseline_mm": 14.0,
     "carriage_on_rail_at_max_baseline_mm": 0.0,
-    "lock_bolt_in_slot_at_max_baseline_mm": 8.75,
+    "lock_bolt_in_slot_at_max_baseline_mm": 6.6,
     "standoffs_clear_rear_parts_mm": 2.0,
-    "yaw_knob_clear_of_foot_mm": 16.6,
-    "optical_axis_above_support_surface_mm": 79.0,
+    "yaw_knob_clear_of_foot_mm": 20.95,
+    "optical_axis_above_support_surface_mm": 81.0,
     "monitor_depth_range_mm": [
       12.5,
       74.5
@@ -438,10 +621,10 @@
     "user_view_on_monitor": {
       "ok": true,
       "eyes_below_horizontal_deg": [
-        2.5,
-        24.7
+        2.7,
+        24.9
       ],
-      "suggested_pitch_deg": -13.6,
+      "suggested_pitch_deg": -13.8,
       "vfov_deg": 47.3,
       "margin_deg": 12.5
     },
@@ -451,7 +634,7 @@
     "fit": {
       "pcb": {
         "overlaps_holder": false,
-        "min_clearance_mm": 0.08
+        "min_clearance_mm": 0.01
       },
       "lens": {
         "overlaps_holder": false,
