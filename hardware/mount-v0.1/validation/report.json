@@ -1,0 +1,491 @@
+{
+  "generator": "hardware/mount-v0.1/build.py",
+  "blender": "5.2.3 LTS",
+  "parts": {
+    "rail": {
+      "quantity": 1,
+      "orientation": "underside on the bed; the tunnel, key groove and nut pockets print as short bridges",
+      "stl": "stl/rail.stl",
+      "mesh": {
+        "ok": true,
+        "non_manifold_edges": 0,
+        "boundary_edges": 0,
+        "degenerate_faces": 0,
+        "bodies": 1,
+        "volume_cm3": 109.45
+      },
+      "print": {
+        "fits_bed": true,
+        "size_mm": [
+          216.0,
+          28.0,
+          22.0
+        ],
+        "steep_overhang_mm2": 27.5,
+        "bridge_mm2": 3275.9
+      }
+    },
+    "monitor_clamp_left": {
+      "quantity": 1,
+      "orientation": "front face of the lip on the bed; the key boss has a 45-degree back",
+      "stl": "stl/monitor_clamp_left.stl",
+      "mesh": {
+        "ok": true,
+        "non_manifold_edges": 0,
+        "boundary_edges": 0,
+        "degenerate_faces": 0,
+        "bodies": 1,
+        "volume_cm3": 34.37
+      },
+      "print": {
+        "fits_bed": true,
+        "size_mm": [
+          51.0,
+          44.5,
+          43.5
+        ],
+        "steep_overhang_mm2": 0.0,
+        "bridge_mm2": 129.6
+      }
+    },
+    "monitor_clamp_right": {
+      "quantity": 1,
+      "orientation": "front face of the lip on the bed; the key boss has a 45-degree back",
+      "stl": "stl/monitor_clamp_right.stl",
+      "mesh": {
+        "ok": true,
+        "non_manifold_edges": 0,
+        "boundary_edges": 0,
+        "degenerate_faces": 0,
+        "bodies": 1,
+        "volume_cm3": 34.37
+      },
+      "print": {
+        "fits_bed": true,
+        "size_mm": [
+          51.0,
+          44.5,
+          43.5
+        ],
+        "steep_overhang_mm2": 0.0,
+        "bridge_mm2": 129.6
+      }
+    },
+    "clamp_arm": {
+      "quantity": 2,
+      "orientation": "flat on its side, depth scale up",
+      "stl": "stl/clamp_arm.stl",
+      "mesh": {
+        "ok": true,
+        "non_manifold_edges": 0,
+        "boundary_edges": 0,
+        "degenerate_faces": 0,
+        "bodies": 1,
+        "volume_cm3": 13.68
+      },
+      "print": {
+        "fits_bed": true,
+        "size_mm": [
+          94.0,
+          73.5,
+          6.0
+        ],
+        "steep_overhang_mm2": 0.0,
+        "bridge_mm2": 0.0
+      }
+    },
+    "desk_foot": {
+      "quantity": 2,
+      "orientation": "pad on the bed (only for desk use, instead of the monitor clamps)",
+      "stl": "stl/desk_foot.stl",
+      "mesh": {
+        "ok": true,
+        "non_manifold_edges": 0,
+        "boundary_edges": 0,
+        "degenerate_faces": 0,
+        "bodies": 1,
+        "volume_cm3": 35.53
+      },
+      "print": {
+        "fits_bed": true,
+        "size_mm": [
+          40.0,
+          135.0,
+          13.8
+        ],
+        "steep_overhang_mm2": 0.0,
+        "bridge_mm2": 29.2
+      }
+    },
+    "carriage_left": {
+      "quantity": 1,
+      "orientation": "upside down: the key points up and the top face with the yaw scale lies on the bed",
+      "stl": "stl/carriage_left.stl",
+      "mesh": {
+        "ok": true,
+        "non_manifold_edges": 0,
+        "boundary_edges": 0,
+        "degenerate_faces": 0,
+        "bodies": 1,
+        "volume_cm3": 26.21
+      },
+      "print": {
+        "fits_bed": true,
+        "size_mm": [
+          56.0,
+          78.0,
+          8.0
+        ],
+        "steep_overhang_mm2": 0.0,
+        "bridge_mm2": 22.7
+      }
+    },
+    "carriage_right": {
+      "quantity": 1,
+      "orientation": "upside down: the key points up and the top face with the yaw scale lies on the bed",
+      "stl": "stl/carriage_right.stl",
+      "mesh": {
+        "ok": true,
+        "non_manifold_edges": 0,
+        "boundary_edges": 0,
+        "degenerate_faces": 0,
+        "bodies": 1,
+        "volume_cm3": 26.21
+      },
+      "print": {
+        "fits_bed": true,
+        "size_mm": [
+          56.0,
+          78.0,
+          8.0
+        ],
+        "steep_overhang_mm2": 0.6,
+        "bridge_mm2": 22.5
+      }
+    },
+    "yoke_left": {
+      "quantity": 1,
+      "orientation": "base on the bed; the pitch hole is a teardrop pointing up",
+      "stl": "stl/yoke_left.stl",
+      "mesh": {
+        "ok": true,
+        "non_manifold_edges": 0,
+        "boundary_edges": 0,
+        "degenerate_faces": 0,
+        "bodies": 1,
+        "volume_cm3": 22.87
+      },
+      "print": {
+        "fits_bed": true,
+        "size_mm": [
+          63.0,
+          44.0,
+          52.99
+        ],
+        "steep_overhang_mm2": 0.0,
+        "bridge_mm2": 0.0
+      }
+    },
+    "yoke_right": {
+      "quantity": 1,
+      "orientation": "base on the bed; the pitch hole is a teardrop pointing up",
+      "stl": "stl/yoke_right.stl",
+      "mesh": {
+        "ok": true,
+        "non_manifold_edges": 0,
+        "boundary_edges": 0,
+        "degenerate_faces": 0,
+        "bodies": 1,
+        "volume_cm3": 22.87
+      },
+      "print": {
+        "fits_bed": true,
+        "size_mm": [
+          63.0,
+          44.0,
+          52.99
+        ],
+        "steep_overhang_mm2": 0.0,
+        "bridge_mm2": 0.0
+      }
+    },
+    "camera_holder": {
+      "quantity": 2,
+      "orientation": "rear plate on the bed; fins have 45-degree undersides, pitch hole is a teardrop",
+      "stl": "stl/camera_holder.stl",
+      "mesh": {
+        "ok": true,
+        "non_manifold_edges": 0,
+        "boundary_edges": 0,
+        "degenerate_faces": 0,
+        "bodies": 1,
+        "volume_cm3": 16.3
+      },
+      "print": {
+        "fits_bed": true,
+        "size_mm": [
+          64.0,
+          42.0,
+          31.6
+        ],
+        "steep_overhang_mm2": 0.0,
+        "bridge_mm2": 73.3
+      }
+    },
+    "knob": {
+      "quantity": 10,
+      "orientation": "hex pocket up",
+      "stl": "stl/knob.stl",
+      "mesh": {
+        "ok": true,
+        "non_manifold_edges": 0,
+        "boundary_edges": 0,
+        "degenerate_faces": 0,
+        "bodies": 1,
+        "volume_cm3": 2.78
+      },
+      "print": {
+        "fits_bed": true,
+        "size_mm": [
+          22.0,
+          22.0,
+          9.0
+        ],
+        "steep_overhang_mm2": 0.0,
+        "bridge_mm2": 0.0
+      }
+    },
+    "coupon_pcb": {
+      "quantity": 1,
+      "orientation": "as the holder",
+      "stl": "stl/coupon_pcb.stl",
+      "mesh": {
+        "ok": true,
+        "non_manifold_edges": 0,
+        "boundary_edges": 0,
+        "degenerate_faces": 0,
+        "bodies": 1,
+        "volume_cm3": 5.99
+      },
+      "print": {
+        "fits_bed": true,
+        "size_mm": [
+          53.0,
+          42.0,
+          16.0
+        ],
+        "steep_overhang_mm2": 0.0,
+        "bridge_mm2": 59.0
+      }
+    },
+    "coupon_rail": {
+      "quantity": 1,
+      "orientation": "as the rail",
+      "stl": "stl/coupon_rail.stl",
+      "mesh": {
+        "ok": true,
+        "non_manifold_edges": 0,
+        "boundary_edges": 0,
+        "degenerate_faces": 0,
+        "bodies": 1,
+        "volume_cm3": 15.2
+      },
+      "print": {
+        "fits_bed": true,
+        "size_mm": [
+          30.0,
+          28.0,
+          22.0
+        ],
+        "steep_overhang_mm2": 0.0,
+        "bridge_mm2": 476.4
+      }
+    },
+    "coupon_slider": {
+      "quantity": 1,
+      "orientation": "as the carriage",
+      "stl": "stl/coupon_slider.stl",
+      "mesh": {
+        "ok": true,
+        "non_manifold_edges": 0,
+        "boundary_edges": 0,
+        "degenerate_faces": 0,
+        "bodies": 1,
+        "volume_cm3": 4.09
+      },
+      "print": {
+        "fits_bed": true,
+        "size_mm": [
+          24.0,
+          28.0,
+          8.0
+        ],
+        "steep_overhang_mm2": 0.0,
+        "bridge_mm2": 0.0
+      }
+    }
+  },
+  "fasteners": {
+    "ok": true,
+    "bolt": "M4x16",
+    "joints": {
+      "rail_lock": {
+        "grip": 12.0,
+        "engagement": 3.2,
+        "tip_room": 0.5
+      },
+      "yaw": {
+        "grip": 11.0,
+        "engagement": 3.2,
+        "tip_room": 15.6
+      },
+      "pitch": {
+        "grip": 11.6,
+        "engagement": 3.2,
+        "tip_room": 11.75
+      },
+      "bracket_to_rail": {
+        "grip": 10.8,
+        "engagement": 3.2,
+        "tip_room": 1.2
+      },
+      "clamp_arm": {
+        "grip": 9.0,
+        "engagement": 3.2,
+        "tip_room": 1.0
+      }
+    }
+  },
+  "ranges": {
+    "carriages_clear_at_min_baseline_mm": 14.0,
+    "carriage_on_rail_at_max_baseline_mm": 0.0,
+    "lock_bolt_in_slot_at_max_baseline_mm": 8.75,
+    "standoffs_clear_rear_parts_mm": 2.0,
+    "yaw_knob_clear_of_foot_mm": 15.6,
+    "optical_axis_above_support_surface_mm": 79.0,
+    "monitor_depth_range_mm": [
+      12.5,
+      74.5
+    ],
+    "baseline_scale_ticks": [
+      70.0,
+      75.0,
+      80.0,
+      85.0,
+      90.0,
+      95.0,
+      100.0,
+      105.0,
+      110.0,
+      115.0,
+      120.0,
+      125.0,
+      130.0,
+      135.0,
+      140.0,
+      145.0,
+      150.0,
+      155.0,
+      160.0
+    ],
+    "user_view_on_monitor": {
+      "ok": true,
+      "eyes_below_horizontal_deg": [
+        2.5,
+        24.7
+      ],
+      "suggested_pitch_deg": -13.6,
+      "vfov_deg": 47.3,
+      "margin_deg": 12.5
+    },
+    "ok": true
+  },
+  "assembly": {
+    "fit": {
+      "pcb": {
+        "overlaps_holder": false,
+        "min_clearance_mm": 0.08
+      },
+      "lens": {
+        "overlaps_holder": false,
+        "min_clearance_mm": 8.59
+      },
+      "rear_parts": {
+        "overlaps_holder": false,
+        "min_clearance_mm": 0.5
+      },
+      "connector": {
+        "overlaps_holder": false,
+        "min_clearance_mm": 7.0
+      },
+      "cable_keepout": {
+        "overlaps_holder": false,
+        "min_clearance_mm": 8.0
+      },
+      "ok": true
+    },
+    "motion": {
+      "poses": 585,
+      "collisions": [],
+      "self_test_detects_overlap": true,
+      "ok": true
+    },
+    "access": {
+      "cable_keepout_hits": [],
+      "fov_occlusions": [
+        {
+          "camera": "left",
+          "part": "carriage_right",
+          "pose": "desk, baseline 70, left yaw +20 pitch -25, right yaw +20 pitch -25"
+        },
+        {
+          "camera": "right",
+          "part": "carriage_left",
+          "pose": "desk, baseline 70, left yaw +20 pitch -25, right yaw +20 pitch -25"
+        },
+        {
+          "camera": "left",
+          "part": "clamp_arm_left",
+          "pose": "monitor 12.5 mm deep, baseline 70, left yaw -25 pitch -25, right yaw -25 pitch -25"
+        },
+        {
+          "camera": "right",
+          "part": "clamp_arm_right",
+          "pose": "monitor 12.5 mm deep, baseline 70, left yaw -25 pitch -25, right yaw -25 pitch -25"
+        },
+        {
+          "camera": "left",
+          "part": "carriage_right",
+          "pose": "monitor 12.5 mm deep, baseline 70, left yaw +20 pitch -25, right yaw +20 pitch -25"
+        },
+        {
+          "camera": "right",
+          "part": "carriage_left",
+          "pose": "monitor 12.5 mm deep, baseline 70, left yaw +20 pitch -25, right yaw +20 pitch -25"
+        },
+        {
+          "camera": "left",
+          "part": "clamp_arm_left",
+          "pose": "monitor 12.5 mm deep, baseline 100, left yaw -25 pitch -25, right yaw -25 pitch -25"
+        },
+        {
+          "camera": "right",
+          "part": "clamp_arm_right",
+          "pose": "monitor 12.5 mm deep, baseline 100, left yaw -25 pitch -25, right yaw -25 pitch -25"
+        },
+        {
+          "camera": "left",
+          "part": "clamp_arm_left",
+          "pose": "monitor 12.5 mm deep, baseline 160, left yaw -25 pitch -25, right yaw -25 pitch -25"
+        },
+        {
+          "camera": "right",
+          "part": "clamp_arm_right",
+          "pose": "monitor 12.5 mm deep, baseline 160, left yaw -25 pitch -25, right yaw -25 pitch -25"
+        }
+      ]
+    }
+  },
+  "ok": true,
+  "failures": []
+}
