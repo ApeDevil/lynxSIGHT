@@ -75,6 +75,7 @@ class Fasteners:
 class Print:
     bed_xyz: tuple = (256.0, 256.0, 256.0)  # Bambu Lab P2S build volume (manufacturer spec)
     bed_margin: float = 5.0  # keep parts this far inside each edge
+    plate_gap: float = 8.0  # between parts on a ready-arranged plate, room for brims and removal
     sliding_clearance: float = 0.15  # FIT, per side, keys in slots
     rotating_gap: float = 0.5  # holder wall to yoke arm, before the knob is tightened
     max_overhang_deg: float = 45.0

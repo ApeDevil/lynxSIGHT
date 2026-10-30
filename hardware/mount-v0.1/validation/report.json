@@ -325,6 +325,63 @@
       }
     }
   },
+  "plates": {
+    "1-coupons.3mf": {
+      "parts": [
+        "coupon_pcb",
+        "coupon_rail",
+        "coupon_slider",
+        "knob"
+      ],
+      "fits_bed": true,
+      "extent_mm": [
+        157.0,
+        42.0,
+        22.0
+      ]
+    },
+    "2-base.3mf": {
+      "parts": [
+        "clamp_arm_1",
+        "clamp_arm_2",
+        "knob_1",
+        "monitor_clamp_left",
+        "monitor_clamp_right",
+        "knob_2",
+        "knob_3",
+        "knob_4",
+        "rail"
+      ],
+      "fits_bed": true,
+      "extent_mm": [
+        226.0,
+        162.0,
+        43.5
+      ]
+    },
+    "3-cameras.3mf": {
+      "parts": [
+        "carriage_left",
+        "carriage_right",
+        "yoke_left",
+        "yoke_right",
+        "camera_holder_1",
+        "camera_holder_2",
+        "knob_1",
+        "knob_2",
+        "knob_3",
+        "knob_4",
+        "knob_5",
+        "knob_6"
+      ],
+      "fits_bed": true,
+      "extent_mm": [
+        237.0,
+        138.0,
+        53.0
+      ]
+    }
+  },
   "fasteners": {
     "ok": true,
     "bolt": "M4x16",

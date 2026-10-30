@@ -7,6 +7,7 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from lynx_mount.params import DEFAULT, fastener_stacks  # noqa: E402
+from lynx_mount.plates import pack  # noqa: E402
 
 
 class FastenerStacks(unittest.TestCase):
@@ -60,6 +61,30 @@ class Ranges(unittest.TestCase):
         t = self.p.angle_ticks(self.p.yaw_range)
         self.assertEqual(t, [-x for x in reversed(t)])
         self.assertEqual(max(t), self.p.yaw_range)
+
+
+class Plates(unittest.TestCase):
+    def test_packed_parts_stay_on_the_bed_and_apart(self):
+        pr = DEFAULT.printing
+        sizes = [("rail", 216, 28)] + [(f"knob_{i}", 22, 22) for i in range(10)] + [(f"arm_{i}", 73.5, 94) for i in range(2)]
+        layout = pack(sizes, pr.bed_xyz[:2], pr.bed_margin, pr.plate_gap)
+        dims = {n: (max(w, d), min(w, d)) for n, w, d in sizes}
+        placed = []
+        for plate in layout:
+            boxes = []
+            for name, x, y, _ in plate:
+                w, d = dims[name]
+                lo, hi = (x - w / 2, y - d / 2), (x + w / 2, y + d / 2)
+                self.assertGreaterEqual(min(lo), pr.bed_margin - 1e-9)
+                self.assertLessEqual(hi[0], pr.bed_xyz[0] - pr.bed_margin + 1e-9)
+                self.assertLessEqual(hi[1], pr.bed_xyz[1] - pr.bed_margin + 1e-9)
+                for blo, bhi in boxes:
+                    apart = (lo[0] >= bhi[0] + pr.plate_gap - 1e-9 or blo[0] >= hi[0] + pr.plate_gap - 1e-9
+                             or lo[1] >= bhi[1] + pr.plate_gap - 1e-9 or blo[1] >= hi[1] + pr.plate_gap - 1e-9)
+                    self.assertTrue(apart, name)
+                boxes.append((lo, hi))
+                placed.append(name)
+        self.assertCountEqual(placed, dims)
 
 
 if __name__ == "__main__":

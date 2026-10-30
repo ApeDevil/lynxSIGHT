@@ -87,6 +87,21 @@ desk foot at 40 × 135 mm.
 [p2s1]: https://www.gigaparts.com/bambu-lab-p2s-3d-printer.html
 [p2s2]: https://www.makerpoint.nl/en-gb/3d-printing/3d-printers/bambu-lab-all/bambu-lab-p2s-210000007716
 
+**Ready-made plates.** Open the files in `hardware/mount-v0.1/plates/` in Bambu Studio,
+one plate each, in this order:
+
+| Plate | Contents | Use |
+|---|---|---|
+| `1-coupons.3mf` | `coupon_pcb`, `coupon_rail`, `coupon_slider`, 1 knob | Check the fit first (next section) |
+| `2-base.3mf` | Rail, both monitor clamps, 2 clamp arms, 4 knobs | Knobs for the clamp arms and the bracket bolts |
+| `3-cameras.3mf` | Both carriages, both yokes, 2 camera holders, 6 knobs | Knobs for the rail locks, yaw and pitch |
+
+Plates 2 and 3 together hold the whole monitor rig, 10 knobs included. Each part
+is a separate object, already in its print orientation and at least 8 mm from its
+neighbours and 5 mm from the bed edge, so don't rotate or re-arrange anything. On a whole plate, the simplest choice is the
+stronger setting below (4 walls, 30 % gyroid) for every part.
+Desk feet are not on a plate. Print `stl/desk_foot.stl` twice if you want them.
+
 No part needs supports. Each STL is exported lying in its print orientation, centred, on
 z = 0. Start from Bambu Studio's **Generic PETG** (or your filament's) profile on the
 textured PEI plate, and change only:

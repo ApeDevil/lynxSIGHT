@@ -29,8 +29,10 @@ The build exits non-zero if a check fails.
 | `lynx_mount/assembly.py` | Rig-frame poses for a given baseline, per-camera yaw and pitch, stand (monitor clamp or desk feet) and monitor depth, using the shared conventions |
 | `lynx_mount/validate.py` | Mesh, print, fit, collision-sweep, access and fastener checks |
 | `lynx_mount/outputs.py` | Print orientations, STL writer, the `.blend` scene and the renders |
+| `lynx_mount/plates.py` | Which parts go on which ready-made print plate, how they are arranged, and the .3mf writer |
 | `lynx_mount/mesh.py` | Solid primitives and exact booleans |
 | `stl/` | The printable parts, generated and lying in print orientation |
+| `plates/` | Ready-to-print P2S plates (`1-coupons`, `2-base`, `3-cameras`) as .3mf files |
 | `blend/mount-v0.1.blend` | Collections: Assembly (on the monitor), Monitor, Camera reference, Keep-outs and FOV, Desk variant, Exploded, Print layout |
 | `renders/` | Previews |
 | `validation/report.json` | Results of the last build's checks |
