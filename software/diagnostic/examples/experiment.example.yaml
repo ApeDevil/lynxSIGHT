@@ -1,0 +1,45 @@
+# LYNX SIGHT experiment config (schema: docs/architecture/shared-interface.md).
+# Generate one for your connected cameras with `sight-diag init-config`, or copy this file and
+# replace the device paths with the ones `sight-diag list` prints under "config device".
+schema: lynx-sight/experiment/v1
+experiment_id: exp-001-baseline
+notes: "First light: both cameras on the rig below the monitor, room lighting only."
+
+rig:
+  baseline_mm: 100          # distance between the optical axes at the pivot plane
+  user_distance_mm: 600     # eyes to rig origin, measured
+
+cameras:
+  # IDs as seen by the user facing the cameras. by-path links follow the USB port: keep each
+  # camera in the same port, or regenerate the config.
+  cam_left:
+    device: /dev/v4l/by-path/pci-0000:00:14.0-usb-0:1:1.0-video-index0
+    serial: null
+    yaw_deg: 0              # + toward rig centre
+    pitch_deg: 0            # + up
+    controls: {}
+  cam_right:
+    device: /dev/v4l/by-path/pci-0000:00:14.0-usb-0:2:1.0-video-index0
+    serial: null
+    yaw_deg: 0
+    pitch_deg: 0
+    controls: {}
+
+capture:
+  fourcc: MJPG              # MJPG keeps two streams within USB 2.0 bandwidth
+  width: 1280
+  height: 800
+  fps: 60                   # what was requested; recordings store what was achieved
+  buffer_size: 1
+  controls:                 # names from `sight-diag list`; values are device units
+    auto_exposure: 1        # 1 = manual, 3 = automatic (UVC aperture-priority)
+    exposure_time_absolute: 100   # UVC unit is 100 us: 100 = 10 ms. Exposure longer than
+                                  # the frame period (16.7 ms at 60 fps) lowers the frame rate.
+
+processing:
+  quality: {enabled: true, max_hz: 10}
+  face: {enabled: true, max_hz: 30, options: {input_width: 640, score_threshold: 0.7}}
+  eyes: {enabled: true}
+  landmarks: {enabled: true, max_hz: 15}    # needs `uv sync --extra landmarks` + model fetch
+
+output_dir: experiments

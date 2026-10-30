@@ -1,0 +1,41 @@
+[project]
+name = "lynx-sight-diagnostic"
+version = "0.1.0"
+description = "LYNX SIGHT v0.1 dual-camera diagnostic tool for Arducam B0332 (OV9281) UVC cameras on Linux"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+    # contrib is a superset of opencv-python and is what mediapipe depends on;
+    # installing both would give two conflicting `cv2` packages.
+    "opencv-contrib-python>=4.10",
+    "numpy>=1.26",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+# Dense face mesh, iris points and uncalibrated head-pose angles (MediaPipe Face Landmarker).
+landmarks = ["mediapipe>=0.10.21"]
+
+[project.scripts]
+sight-diag = "lynx_sight_diag.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/lynx_sight_diag"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
