@@ -69,7 +69,7 @@ def mesh_health(ob):
                 degenerate_faces=degenerate, bodies=islands, volume_cm3=round(volume / 1000, 2))
 
 
-def print_report(ob, bed_xy, max_overhang_deg=45.0):
+def print_report(ob, bed_xyz, margin=0.0, max_overhang_deg=45.0):
     """Analyse a mesh already in print orientation (Z up, resting on z = 0)."""
     me = ob.data
     vs = np.array([v.co[:] for v in me.vertices])
@@ -85,7 +85,8 @@ def print_report(ob, bed_xy, max_overhang_deg=45.0):
             bridge += f.area
         elif nz < limit - 1e-3:
             overhang += f.area
-    fits = bool(size[0] <= bed_xy[0] and size[1] <= bed_xy[1]) or bool(size[1] <= bed_xy[0] and size[0] <= bed_xy[1])
+    bx, by, bz = bed_xyz[0] - 2 * margin, bed_xyz[1] - 2 * margin, bed_xyz[2]
+    fits = bool(size[2] <= bz) and (bool(size[0] <= bx and size[1] <= by) or bool(size[1] <= bx and size[0] <= by))
     return dict(fits_bed=fits, size_mm=[round(float(s), 2) for s in size],
                 steep_overhang_mm2=round(overhang, 1), bridge_mm2=round(bridge, 1))
 
@@ -109,11 +110,18 @@ def _min_distance(geom_a, matrix_a, tree_b, sample=None):
 
 # Pairs that touch by design (bearing faces), so their surfaces may coincide.
 DESIGNED_CONTACT = {
-    frozenset({"base", "carriage_left"}), frozenset({"base", "carriage_right"}),
+    frozenset({"rail", "carriage_left"}), frozenset({"rail", "carriage_right"}),
     frozenset({"carriage_left", "yoke_left"}), frozenset({"carriage_right", "yoke_right"}),
 }
 
 REF_HARD = ("pcb", "lens", "rear_parts", "connector")
+
+
+def stand_configs(p: Mount):
+    """(stand, monitor depth) combinations the sweep covers: the desk, and the monitor
+    clamp at both ends of its depth range."""
+    d0, d1 = p.monitor_depth_range
+    return [("desk", 30.0), ("monitor", d0), ("monitor", d1)]
 
 
 def sweep_poses(p: Mount):
@@ -121,19 +129,24 @@ def sweep_poses(p: Mount):
     yaws = p.angle_ticks(p.yaw_range)  # every scale step
     pitches = [-p.pitch_range, -p.pitch_range / 2, 0.0, p.pitch_range / 2, p.pitch_range]
     poses = []
-    for b in baselines:
-        for y in yaws:
-            for pt in pitches:
-                s = asm.Setting(y, pt)
-                poses.append(asm.Pose(b, s, s))
-        for pt in pitches:  # both turned the same way (one in, one out)
-            poses.append(asm.Pose(b, asm.Setting(p.yaw_range, pt), asm.Setting(-p.yaw_range, pt)))
-            poses.append(asm.Pose(b, asm.Setting(-p.yaw_range, pt), asm.Setting(p.yaw_range, pt)))
+    for stand, depth in stand_configs(p):
+        def pose(b, l, r):
+            return asm.Pose(b, l, r, stand=stand, monitor_depth=depth)
+        for b in baselines:
+            for y in yaws:
+                for pt in pitches:
+                    s = asm.Setting(y, pt)
+                    poses.append(pose(b, s, s))
+            for pt in pitches:  # both turned the same way (one in, one out)
+                poses.append(pose(b, asm.Setting(p.yaw_range, pt), asm.Setting(-p.yaw_range, pt)))
+                poses.append(pose(b, asm.Setting(-p.yaw_range, pt), asm.Setting(p.yaw_range, pt)))
     return poses
 
 
-def check_assembly(p: Mount, part_objects, ref_objects, fov_object):
+def check_assembly(p: Mount, part_objects, ref_objects, fov_object, monitor_objects):
+    """monitor_objects: {depth: monitor reference object} for every depth in stand_configs."""
     geoms = {k: Geometry(o) for k, o in part_objects.items()}
+    monitors = {d: Geometry(o) for d, o in monitor_objects.items()}
     refs = {k: Geometry(o) for k, o in ref_objects.items()}
     fov = Geometry(fov_object)
 
@@ -161,6 +174,8 @@ def check_assembly(p: Mount, part_objects, ref_objects, fov_object):
         inst = asm.instance_matrices(p, pose)
         cams = asm.camera_matrices(p, pose)
         trees = {name: (geoms[key].tree(M), group) for name, (key, M, group) in inst.items()}
+        if pose.stand == "monitor":
+            trees["monitor"] = (monitors[pose.monitor_depth].tree(asm.monitor_matrix(p, pose)), "monitor")
         for side, M in cams.items():
             for k in REF_HARD:
                 trees[f"camera_{side}_{k}"] = (refs[k].tree(M), f"{side}.holder")
@@ -188,7 +203,7 @@ def check_assembly(p: Mount, part_objects, ref_objects, fov_object):
                     seen_cable.add((side, name))
                     result["access"]["cable_keepout_hits"].append(dict(camera=side, part=name, pose=_pose_str(pose)))
                 if _overlaps(frustum, t):
-                    k = (side, name, pose.baseline)
+                    k = (side, name, pose.baseline, pose.stand)
                     if k not in seen_fov:
                         seen_fov.add(k)
                         result["access"]["fov_occlusions"].append(dict(camera=side, part=name, pose=_pose_str(pose)))
@@ -200,7 +215,8 @@ def check_assembly(p: Mount, part_objects, ref_objects, fov_object):
 
 
 def _pose_str(pose):
-    return (f"baseline {pose.baseline:g}, left yaw {pose.left.yaw_deg:+g} pitch {pose.left.pitch_deg:+g}, "
+    stand = "desk" if pose.stand == "desk" else f"monitor {pose.monitor_depth:g} mm deep"
+    return (f"{stand}, baseline {pose.baseline:g}, left yaw {pose.left.yaw_deg:+g} pitch {pose.left.pitch_deg:+g}, "
             f"right yaw {pose.right.yaw_deg:+g} pitch {pose.right.pitch_deg:+g}")
 
 
@@ -222,9 +238,27 @@ def check_ranges(p: Mount):
         "lock_bolt_in_slot_at_max_baseline_mm": round(slot_end - (p.baseline_max / 2 + p.lock_bolt_offset) - p.fasteners.m4_clearance / 2, 2),
         "standoffs_clear_rear_parts_mm": round(p.standoff_height - p.camera.rear_component_height.value, 2),
         "yaw_knob_clear_of_foot_mm": round(fastener_stacks(p)["yaw"]["tip_room"], 2),
-        "optical_axis_above_desk_mm": round(-p.desk_y, 1),
+        "optical_axis_above_support_surface_mm": round(-p.surface_y, 1),
+        "monitor_depth_range_mm": [round(v, 1) for v in p.monitor_depth_range],
         "baseline_scale_ticks": [b for b, _ in p.baseline_ticks()],
     }
-    ok = all(v >= 0 for k, v in findings.items() if k.endswith("_mm") and k != "optical_axis_above_desk_mm")
+    findings["user_view_on_monitor"] = user_view(p)
+    ok = all(v >= 0 for k, v in findings.items() if k.endswith("_mm") and not isinstance(v, list))
+    ok = ok and findings["user_view_on_monitor"]["ok"]
     findings["ok"] = ok
     return findings
+
+
+def user_view(p: Mount):
+    """Can one pitch setting keep every expected eye position inside the vertical FOV when
+    the rig sits on the monitor? Angles are below the horizontal, from the optical centre."""
+    lens_above_top = -(p.surface_y - p.felt_thickness)
+    angles = [math.degrees(math.atan2(lens_above_top - h, d))
+              for h in p.eye_above_monitor_top for d in p.user_distance]
+    lo, hi = min(angles), max(angles)
+    half = p.camera.vfov_deg / 2
+    pitch = -(lo + hi) / 2  # aim at the middle of the span
+    ok = (hi - lo) <= 2 * half and abs(pitch) <= p.pitch_range
+    return dict(ok=ok, eyes_below_horizontal_deg=[round(lo, 1), round(hi, 1)],
+                suggested_pitch_deg=round(pitch, 1), vfov_deg=round(p.camera.vfov_deg, 1),
+                margin_deg=round(half - (hi - lo) / 2, 1))

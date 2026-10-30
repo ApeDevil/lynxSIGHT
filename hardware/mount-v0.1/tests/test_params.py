@@ -39,7 +39,13 @@ class Ranges(unittest.TestCase):
         self.assertLessEqual(self.p.baseline_max / 2 + self.p.carriage_width / 2, self.p.rail_length / 2)
 
     def test_rail_fits_the_reference_bed(self):
-        self.assertLessEqual(self.p.rail_length, self.p.printing.bed_xy[0])
+        bed = self.p.printing.bed_xyz[0] - 2 * self.p.printing.bed_margin
+        self.assertLessEqual(self.p.rail_length, bed)
+
+    def test_clamp_grips_thin_and_thick_monitors(self):
+        lo, hi = self.p.monitor_depth_range
+        self.assertLessEqual(lo, 15.0)
+        self.assertGreaterEqual(hi, 70.0)
 
     def test_standoffs_clear_the_assumed_rear_components(self):
         self.assertGreater(self.p.standoff_height, self.p.camera.rear_component_height.value)

@@ -24,11 +24,16 @@ class Setting:
     pitch_deg: float = 0.0
 
 
+STANDS = ("monitor", "desk")
+
+
 @dataclass(frozen=True)
 class Pose:
     baseline: float
     left: Setting = Setting()
     right: Setting = Setting()
+    stand: str = "monitor"  # monitor clamps on the top edge, or desk feet
+    monitor_depth: float = 30.0  # front face to back, where the clamp's rear arm touches
 
     def setting(self, side):
         return self.left if side == "left" else self.right
@@ -94,7 +99,8 @@ def instance_matrices(p: Mount, pose: Pose):
     The moving group says what an instance turns with: 'static', '<side>.yoke' or
     '<side>.holder'.
     """
-    out = {"base": ("base", Matrix.Identity(4), "static")}
+    out = {"rail": ("rail", Matrix.Identity(4), "static")}
+    out.update(stand_matrices(p, pose))
     for side in SIDES:
         carriage, yoke, holder = camera_frames(p, pose, side)
         out[f"carriage_{side}"] = (f"carriage_{side}", carriage, f"{side}.carriage")
@@ -104,6 +110,33 @@ def instance_matrices(p: Mount, pose: Pose):
             frame = carriage if rides == "carriage" else yoke
             out[f"knob_{side}_{suffix}"] = ("knob", frame @ local, f"{side}.{rides}")
     return out
+
+
+def stand_matrices(p: Mount, pose: Pose):
+    """The brackets under the rail ends, and for the monitor stand the rear arms and knobs."""
+    f = p.fasteners
+    out = {}
+    L = p.rail_length / 2
+    for side, sx in SIDES.items():
+        centre = _t(sx * p.bracket_centre_x, 0.0, 0.0)
+        if pose.stand == "desk":
+            out[f"desk_foot_{side}"] = ("desk_foot", centre, "static")
+            continue
+        out[f"monitor_clamp_{side}"] = (f"monitor_clamp_{side}", centre, "static")
+        # The arm sits on the ear's outer face; its leg's felt touches the monitor back.
+        leg_z = p.monitor_front_z - pose.monitor_depth - p.felt_thickness
+        outer = L + p.clamp_ear
+        x0 = outer if sx > 0 else -outer - p.arm_plate
+        out[f"clamp_arm_{side}"] = ("clamp_arm", _t(x0, 0.0, leg_z), "static")
+        head_proud = f.m4_head_height - p.knob_pocket_depth
+        knob_x = sx * (outer + p.arm_plate + head_proud + p.knob_height)
+        out[f"knob_{side}_clamp"] = ("knob", _t(knob_x, p.clamp_bolt_y, p.clamp_bolt_z) @ _ry(-sx * 90), "static")
+    return out
+
+
+def monitor_matrix(p: Mount, pose: Pose):
+    """Frame of the monitor reference volume: its front-top edge at the origin."""
+    return _t(0.0, p.surface_y - p.felt_thickness, p.monitor_front_z)
 
 
 def camera_matrices(p: Mount, pose: Pose):

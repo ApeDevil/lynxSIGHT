@@ -15,18 +15,24 @@ from .params import Mount
 _UP_Y = asm.RIG_TO_BLENDER                                   # rig +Y up
 _UP_NEG_Y = Matrix.Rotation(math.pi, 4, "X") @ asm.RIG_TO_BLENDER  # rig -Y up (upside down)
 _UP_Z = Matrix.Identity(4)                                   # rig +Z up (rear face on the bed)
+_UP_NEG_Z = Matrix.Rotation(math.pi, 4, "Y")                 # rig -Z up (front face on the bed)
+_UP_X = Matrix.Rotation(-math.pi / 2, 4, "Y")                # rig +X up (lying on its side)
 
 PRINTS = {
     # part: (print rotation, quantity, why this orientation)
-    "base": (_UP_Y, 1, "flat underside on the bed; tunnel and cable channel bridge, no supports"),
+    "rail": (_UP_Y, 1, "underside on the bed; the tunnel, key groove and nut pockets print as short bridges"),
+    "monitor_clamp_left": (_UP_NEG_Z, 1, "front face of the lip on the bed; the key boss has a 45-degree back"),
+    "monitor_clamp_right": (_UP_NEG_Z, 1, "front face of the lip on the bed; the key boss has a 45-degree back"),
+    "clamp_arm": (_UP_X, 2, "flat on its side, depth scale up"),
+    "desk_foot": (_UP_Y, 2, "pad on the bed (only for desk use, instead of the monitor clamps)"),
     "carriage_left": (_UP_NEG_Y, 1, "upside down: the key points up and the top face with the yaw scale lies on the bed"),
     "carriage_right": (_UP_NEG_Y, 1, "upside down: the key points up and the top face with the yaw scale lies on the bed"),
     "yoke_left": (_UP_Y, 1, "base on the bed; the pitch hole is a teardrop pointing up"),
     "yoke_right": (_UP_Y, 1, "base on the bed; the pitch hole is a teardrop pointing up"),
     "camera_holder": (_UP_Z, 2, "rear plate on the bed; fins have 45-degree undersides, pitch hole is a teardrop"),
-    "knob": (_UP_Z, 8, "hex pocket up"),
+    "knob": (_UP_Z, 10, "hex pocket up"),
     "coupon_pcb": (_UP_Z, 1, "as the holder"),
-    "coupon_rail": (_UP_Y, 1, "as the base"),
+    "coupon_rail": (_UP_Y, 1, "as the rail"),
     "coupon_slider": (_UP_NEG_Y, 1, "as the carriage"),
 }
 
@@ -63,7 +69,9 @@ COLOURS = {
     "base": (0.12, 0.12, 0.13, 1), "carriage": (0.85, 0.42, 0.10, 1), "yoke": (0.18, 0.40, 0.75, 1),
     "camera_holder": (0.80, 0.80, 0.78, 1), "knob": (0.05, 0.05, 0.05, 1), "coupon": (0.55, 0.70, 0.35, 1),
     "ref_pcb": (0.05, 0.35, 0.15, 1), "ref_lens": (0.02, 0.02, 0.02, 1), "ref_rear_parts": (0.6, 0.55, 0.2, 1),
-    "ref_connector": (0.9, 0.9, 0.9, 1), "ref_cable_keepout": (0.9, 0.1, 0.1, 0.35), "ref_fov": (1.0, 0.85, 0.1, 0.08),
+    "ref_connector": (0.9, 0.9, 0.9, 1), "ref_monitor": (0.08, 0.08, 0.09, 1),
+    "monitor_clamp": (0.85, 0.42, 0.10, 1), "clamp_arm": (0.18, 0.40, 0.75, 1), "desk_foot": (0.12, 0.12, 0.13, 1),
+    "rail": (0.12, 0.12, 0.13, 1), "ref_cable_keepout": (0.9, 0.1, 0.1, 0.35), "ref_fov": (1.0, 0.85, 0.1, 0.08),
 }
 
 
@@ -98,8 +106,10 @@ def _instance(name, mesh_ob, matrix, coll, colour_key):
     return ob
 
 
-def build_scene(p: Mount, parts, refs, fov, pose, explode_offset=(420.0, 0.0, 0.0)):
-    """Collections: Assembly (posed), Camera reference, Exploded, Print layout."""
+def build_scene(p: Mount, parts, refs, fov, monitor, pose, explode_offset=(420.0, 0.0, 0.0),
+                desk_offset=(-420.0, 0.0, 0.0)):
+    """Collections: Assembly (on the monitor), Monitor, Camera reference, Keep-outs and FOV,
+    Desk variant, Exploded, Print layout."""
     scene = bpy.context.scene
     scene.unit_settings.system = "METRIC"
     scene.unit_settings.scale_length = 0.001
@@ -107,7 +117,7 @@ def build_scene(p: Mount, parts, refs, fov, pose, explode_offset=(420.0, 0.0, 0.
 
     root = Matrix(asm.RIG_TO_BLENDER)
     library = _collection("Part meshes")  # the source objects, one per printable part
-    for ob in list(parts.values()) + list(refs.values()) + [fov]:
+    for ob in list(parts.values()) + list(refs.values()) + [fov, monitor]:
         for c in list(ob.users_collection):
             c.objects.unlink(ob)
         library.objects.link(ob)
@@ -120,6 +130,8 @@ def build_scene(p: Mount, parts, refs, fov, pose, explode_offset=(420.0, 0.0, 0.
     assembly = _collection("Assembly")
     reference = _collection("Camera reference")
     keepouts = _collection("Keep-outs and FOV")
+    monitor_coll = _collection("Monitor")
+    desk = _collection("Desk variant")
     exploded = _collection("Exploded")
     layout = _collection("Print layout")
 
@@ -131,9 +143,20 @@ def build_scene(p: Mount, parts, refs, fov, pose, explode_offset=(420.0, 0.0, 0.
             _instance(f"cam_{side}_{k}", refs[k], root @ M, reference, f"ref_{k}")
         _instance(f"cam_{side}_cable_keepout", refs["cable_keepout"], root @ M, keepouts, "ref_cable_keepout")
         _instance(f"cam_{side}_fov", fov, root @ M, keepouts, "ref_fov")
+    if pose.stand == "monitor":
+        _instance("monitor", monitor, root @ asm.monitor_matrix(p, pose), monitor_coll, "ref_monitor")
+
+    # The same rig on desk feet, beside it.
+    desk_pose = asm.Pose(pose.baseline, pose.left, pose.right, stand="desk")
+    dshift = Matrix.Translation(desk_offset)
+    for name, (key, M, _group) in asm.instance_matrices(p, desk_pose).items():
+        _instance(f"d_{name}", parts[key], dshift @ root @ M, desk, key)
+    for side, M in asm.camera_matrices(p, desk_pose).items():
+        for k in ("pcb", "lens", "rear_parts", "connector"):
+            _instance(f"d_cam_{side}_{k}", refs[k], dshift @ root @ M, desk, f"ref_{k}")
 
     # Exploded: the same instances at zero angles, each stack layer lifted.
-    zero = asm.Pose(pose.baseline)
+    zero = asm.Pose(pose.baseline, monitor_depth=pose.monitor_depth)
     shift = Matrix.Translation(explode_offset)
     for name, (key, M, group) in asm.instance_matrices(p, zero).items():
         layer = group.split(".")[-1]
@@ -142,6 +165,12 @@ def build_scene(p: Mount, parts, refs, fov, pose, explode_offset=(420.0, 0.0, 0.
             lift = lift @ Matrix.Translation((0, 14 if "rail_lock" in name else -14 if "yaw" in name else 0, 0))
             if "pitch" in name:
                 lift = asm.EXPLODE["yoke"] @ Matrix.Translation((18 if "right" in name else -18, 0, 0))
+            if "clamp" in name:
+                lift = Matrix.Translation((36 if "right" in name else -36, -30, -25))
+        if key == "monitor_clamp":
+            lift = Matrix.Translation((0, -30, 0))
+        if key == "clamp_arm":
+            lift = Matrix.Translation((18 if "right" in name else -18, -30, -25))
         _instance(f"x_{name}", parts[key], shift @ root @ lift @ M, exploded, key)
     for side, M in asm.camera_matrices(p, zero).items():
         for k in ("pcb", "lens", "rear_parts", "connector"):
@@ -157,7 +186,8 @@ def build_scene(p: Mount, parts, refs, fov, pose, explode_offset=(420.0, 0.0, 0.
         x += size[0] / 2
         _instance(f"print_{key}", parts[key], Matrix.Translation((x, -300.0, 0.0)) @ M, layout, key)
         x += size[0] / 2 + 15.0
-    return dict(assembly=assembly, reference=reference, keepouts=keepouts, exploded=exploded, layout=layout)
+    return dict(assembly=assembly, reference=reference, keepouts=keepouts, monitor=monitor_coll, desk=desk,
+                exploded=exploded, layout=layout)
 
 
 def _size(ob, M):
@@ -213,16 +243,19 @@ def render_views(path_prefix, collections, desk_z, samples=48, resolution=(1280,
         floor.location.z = z
 
     views = []
-    desk = desk_z
+    surface = desk_z
+    under_monitor = surface - 352.0  # the desk below the 350 mm monitor stand-in
+    rig = ("assembly", "reference", "monitor")
     # Blender frame: rig (x, y, z) -> (x, -z, y). The user sits at -Y looking +Y.
     jobs = [
-        ("assembly_iso", ("assembly", "reference"), (0, 25, -25), (-210, -300, 150), desk),
-        ("assembly_user_view", ("assembly", "reference"), (0, 25, -20), (0, -420, 0), desk),
-        ("assembly_side", ("assembly", "reference"), (0, 25, -25), (-330, 25, -5), desk),
-        ("assembly_rear", ("assembly", "reference"), (0, 25, -25), (190, 330, 170), desk),
-        ("assembly_fov_top", ("assembly", "reference", "keepouts"), (0, -120, -20), (0, -120, 800), desk),
-        ("exploded_iso", ("exploded",), (420, 20, 10), (230, -300, 230), desk),
-        ("print_layout", ("layout",), (91, -300, 0), (91, -1180, 760), 0.0),
+        ("assembly_iso", rig, (0, 25, -40), (-260, -330, 110), under_monitor),
+        ("assembly_user_view", rig, (0, 25, -40), (0, -460, -90), under_monitor),
+        ("assembly_side", rig, (0, 25, -60), (-380, 25, -20), under_monitor),
+        ("assembly_rear", rig, (0, 25, -40), (200, 360, 160), under_monitor),
+        ("assembly_fov_top", rig + ("keepouts",), (0, -120, -20), (0, -120, 800), under_monitor),
+        ("desk_variant_iso", ("desk",), (-420, 25, -30), (-640, -300, 150), surface),
+        ("exploded_iso", ("exploded",), (420, 20, -10), (220, -320, 230), surface - 60.0),
+        ("print_layout", ("layout",), (300, -300, 0), (300, -1500, 980), 0.0),
     ]
     for name, cols, target, loc, floor_z in jobs:
         show(*cols)

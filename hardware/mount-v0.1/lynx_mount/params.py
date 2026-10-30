@@ -73,7 +73,8 @@ class Fasteners:
 
 @dataclass(frozen=True)
 class Print:
-    bed_xy: tuple = (220.0, 220.0)  # smallest common consumer bed (Ender-3 class)
+    bed_xyz: tuple = (256.0, 256.0, 256.0)  # Bambu Lab P2S build volume (manufacturer spec)
+    bed_margin: float = 5.0  # keep parts this far inside each edge
     sliding_clearance: float = 0.15  # FIT, per side, keys in slots
     rotating_gap: float = 0.5  # holder wall to yoke arm, before the knob is tightened
     max_overhang_deg: float = 45.0
@@ -127,7 +128,7 @@ class Mount:
     key_height: float = 2.0
     yaw_tick_radii: tuple = (24.5, 28.5)
 
-    # --- base / rail
+    # --- rail
     rail_length: float = 216.0
     rail_depth: float = 28.0  # along Z
     rail_height: float = 22.0
@@ -135,18 +136,47 @@ class Mount:
     slot_width: float = 4.4
     tunnel_width: float = 7.4  # > nut AF 7.0, < corners 8.08: the nut slides but cannot spin
     tunnel_height: float = 4.5
-    cable_channel: tuple = (12.0, 8.0)  # width, height under the rail
+    key_channel: tuple = (12.0, 4.0)  # width, height of the groove under the rail that keys the brackets
     rail_axis_z: float = -40.0  # rail centre behind the yaw axes (yaw-axis Z = 0)
     scale_strip: float = 6.0  # rail top left visible behind the carriage
-    foot_length: float = 40.0  # along X at each rail end
-    foot_z: tuple = (-95.0, 40.0)  # foot pad extent along rig Z
+
+    # --- brackets: one under each rail end, either a desk foot or a monitor clamp.
+    # Both share the saddle: a block the rail sits on, keyed into the rail's groove and
+    # held by one M4 bolt from below into a nut pressed into the groove ceiling.
+    bracket_width: float = 40.0  # along X; the bracket ends flush with the rail end
+    saddle_thickness: float = 10.0
+    saddle_z: tuple = (-60.0, -18.0)  # saddle extent along rig Z (rail spans -54..-26)
+    saddle_head_pocket: float = 3.0
+    rail_nut_pocket: float = 3.4
+    bracket_blind_hole: float = 3.0  # bolt hole continuing above the rail nut pocket
+    key_clearance: float = 0.2  # per side, saddle boss in the rail groove
+    foot_z: tuple = (-95.0, 40.0)  # desk foot pad extent along rig Z
     foot_thickness: float = 5.0
+
+    # --- monitor clamp (rig frame; the monitor's front face is a plane z = monitor_front_z)
+    monitor_front_z: float = -22.0  # inner face of the front lip, felt pad included
+    felt_thickness: float = 1.5  # self-adhesive felt on every face touching the monitor
+    lip_thickness: float = 4.0
+    lip_drop: float = 12.0  # how far the lip reaches down over the front bezel
+    clamp_bolt_z: float = -30.0  # rear-arm bolt, behind the lip
+    clamp_ear: float = 11.0  # block beyond the rail end, up to the rail top, that takes the arm bolt
+    clamp_nut_inset: float = 3.0  # skin between the ear's outer face and its drop-in nut slot
+    clamp_knob_clearance: float = 2.0  # arm knob above the monitor's top surface
+    arm_plate: float = 6.0  # rear arm thickness along X
+    arm_bar_height: float = 22.0
+    arm_slot: tuple = (6.0, 68.0)  # slot along the bar, measured forward from the leg's inner face
+    arm_leg_drop: float = 50.0  # leg length below the monitor top
+    arm_bar_front: float = 84.0  # bar length forward of the leg's inner face; carries the depth scale
 
     # --- knob
     knob_diameter: float = 22.0
     knob_height: float = 9.0
     knob_pocket_depth: float = 2.6  # < head and nut, so the steel bears, not the knob
     knob_lobes: int = 8
+
+    # --- where the user's eyes are expected (for the field-of-view check, not the geometry)
+    user_distance: tuple = (500.0, 700.0)  # eyes to the screen
+    eye_above_monitor_top: tuple = (-150.0, 50.0)  # ergonomic setups put the top edge near eye level
 
     # ------------------------------------------------------------ derived geometry
     @property
@@ -198,8 +228,30 @@ class Mount:
         return self.yoke_bottom_y - self.carriage_thickness
 
     @property
-    def desk_y(self) -> float:
+    def rail_bottom_y(self) -> float:
         return self.rail_top_y - self.rail_height
+
+    @property
+    def surface_y(self) -> float:
+        """Top of whatever the brackets stand on: the desk, or the monitor's top edge."""
+        return self.rail_bottom_y - self.saddle_thickness
+
+    @property
+    def bracket_centre_x(self) -> float:
+        return self.rail_length / 2 - self.bracket_width / 2
+
+    @property
+    def clamp_bolt_y(self) -> float:
+        """High enough that the arm's knob clears the top of the monitor."""
+        return self.surface_y - self.felt_thickness + self.knob_diameter / 2 + self.clamp_knob_clearance
+
+    @property
+    def monitor_depth_range(self) -> tuple:
+        """Monitor depths (front face to back, where the arm's leg touches) the clamp grips."""
+        s0, s1 = self.arm_slot
+        # leg inner face = bolt - slot position; the felt on the leg sits in between
+        base = self.monitor_front_z - self.felt_thickness - self.clamp_bolt_z
+        return (base + s0, base + s1)
 
     @property
     def carriage_back_z(self) -> float:
@@ -238,12 +290,20 @@ def fastener_stacks(p: Mount) -> dict:
         # head in the yoke pocket -> yoke -> carriage -> nut in a knob below the carriage;
         # the tip leaves through the knob's bore, so the room is the knob's clearance over the foot
         "yaw": stack((p.yoke_base_thickness - p.yaw_head_pocket_depth) + p.carriage_thickness,
-                     (p.rail_top_y - p.desk_y - p.foot_thickness) - (p.knob_height + knob_sink)),
+                     (p.rail_top_y - p.surface_y - p.foot_thickness) - (p.knob_height + knob_sink)),
         # head under a knob on the arm -> arm -> gap -> holder wall skin -> nut pocket; the tip
         # enters the holder in front of the PCB, beside the lens
         "pitch": stack(p.arm_thickness + p.printing.rotating_gap + (p.holder_wall - p.pitch_nut_depth),
                        p.pitch_nut_depth - f.m4_nut_thickness
                        + p.wall_inner_x - p.camera.lens_barrel_diameter.value / 2),
+        # head in a pocket under the saddle -> saddle -> key boss -> nut in the groove
+        # ceiling; the tip runs on into a blind hole above the nut pocket
+        "bracket_to_rail": stack((p.saddle_thickness - p.saddle_head_pocket) + p.key_channel[1] - p.key_clearance,
+                                 p.rail_nut_pocket - f.m4_nut_thickness + p.bracket_blind_hole),
+        # head under a knob on the rear arm -> arm -> saddle skin -> nut in a drop-in slot;
+        # the tip runs on in the bolt hole across the saddle
+        "clamp_arm": stack(p.arm_plate + p.clamp_nut_inset,
+                           p.clamp_ear - p.clamp_nut_inset - f.m4_nut_thickness),
     }
 
 

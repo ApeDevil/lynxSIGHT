@@ -146,24 +146,39 @@ def carriage(p: Mount, side="right"):
     return m.solid(_side("carriage", side), [plate, key], cuts)
 
 
-# ------------------------------------------------------------------ base with rail
-def base(p: Mount, name="base"):
+# ------------------------------------------------------------------ rail
+def _rail_channels(p: Mount, x0, x1, slot_end):
+    """Cuts shared by the rail and its coupon: top slot, nut tunnel, key groove underneath."""
+    zr = p.rail_axis_z
+    yb, yt = p.rail_bottom_y, p.rail_top_y
+    kw, kh = p.key_channel
+    return [
+        m.box(-slot_end, slot_end, yt - p.rail_web - 0.5, yt + 1, zr - p.slot_width / 2, zr + p.slot_width / 2),
+        m.box(x0 - 1, x1 + 1, yt - p.rail_web - p.tunnel_height, yt - p.rail_web, zr - p.tunnel_width / 2, zr + p.tunnel_width / 2),
+        m.box(x0 - 1, x1 + 1, yb - 1, yb + kh, zr - kw / 2, zr + kw / 2),
+    ]
+
+
+def _rail_nut_pocket(p: Mount, x):
+    """Hex pocket in the groove ceiling for the bracket bolt, and the blind hole above it."""
     f = p.fasteners
+    ceiling = p.rail_bottom_y + p.key_channel[1]
+    return [
+        m.extrude(m.hexagon(f.m4_hex_pocket_af, vertex_dir=0.0), ceiling - 0.01, ceiling + p.rail_nut_pocket, "Y",
+                  (x, p.rail_axis_z)),
+        m.cylinder(f.m4_clearance / 2, ceiling, ceiling + p.rail_nut_pocket + p.bracket_blind_hole, "Y",
+                   (x, p.rail_axis_z), segments=32),
+    ]
+
+
+def rail(p: Mount, name="rail"):
     L = p.rail_length / 2
     zr, d = p.rail_axis_z, p.rail_depth / 2
-    yd, yt = p.desk_y, p.rail_top_y
-    adds = [m.box(-L, L, yd, yt, zr - d, zr + d)]
-    fz0, fz1 = p.foot_z
+    yb, yt = p.rail_bottom_y, p.rail_top_y
+    adds = [m.box(-L, L, yb, yt, zr - d, zr + d)]
+    cuts = _rail_channels(p, -L, L, L - 3.0)
     for sx in (-1, 1):
-        cx = sx * (L - p.foot_length / 2)
-        outline = [(x + cx, z + (fz0 + fz1) / 2) for x, z in m.rounded_rect(p.foot_length, fz1 - fz0, 6.0)]
-        adds.append(m.extrude(outline, yd, yd + p.foot_thickness, "Y"))
-    slot_end = L - 3.0
-    cuts = [
-        m.box(-slot_end, slot_end, yt - p.rail_web - 0.5, yt + 1, zr - p.slot_width / 2, zr + p.slot_width / 2),
-        m.box(-L - 1, L + 1, yt - p.rail_web - p.tunnel_height, yt - p.rail_web, zr - p.tunnel_width / 2, zr + p.tunnel_width / 2),
-        m.box(-L - 1, L + 1, yd - 1, yd + p.cable_channel[1], zr - p.cable_channel[0] / 2, zr + p.cable_channel[0] / 2),
-    ]
+        cuts += _rail_nut_pocket(p, sx * p.bracket_centre_x)
     e = p.printing.engrave_depth
     zback = zr - d
     for b, x in p.baseline_ticks():
@@ -176,16 +191,104 @@ def base(p: Mount, name="base"):
                 m.transform(t, m.rotation("Y", 180))
                 m.transform(t, m.translation(sx * x, yt - 6.0, zback + 0.6))
                 cuts.append(t)
-    # Cable-tie slot pairs behind the rail on each foot, for a cable running along Z.
-    sl, sw = p.tie_slot
-    for sx in (-1, 1):
-        for dx in (-5.0, 5.0):
-            x = sx * (L - p.foot_length / 2) + dx
-            cuts.append(m.box(x - sw / 2, x + sw / 2, yd - 1, yd + p.foot_thickness + 1, fz0 + 18 - sl / 2, fz0 + 18 + sl / 2))
     label = m.text("SIGHT v0.1", 4.0, 1.2, name="label")
-    m.transform(label, m.rotation("X", -90))  # flat on the right foot, readable from the user's side
-    m.transform(label, m.translation(L - p.foot_length / 2, yd + p.foot_thickness - e, fz1 - 8.0))
+    m.transform(label, m.translation(0.0, yb + 10.0, zr + d - 0.6))  # on the front face, under the cameras
     cuts.append(label)
+    return m.solid(name, adds, cuts)
+
+
+# ------------------------------------------------------------------ brackets
+def _saddle(p: Mount, z0, z1):
+    """The block under a rail end: keyed into the rail groove, bolted from below.
+
+    Local frame: rig axes, x = 0 at the bracket centre (the rail's nut pocket).
+    """
+    f = p.fasteners
+    w = p.bracket_width / 2
+    ys, yb = p.surface_y, p.rail_bottom_y
+    zr = p.rail_axis_z
+    kw, kh = p.key_channel
+    c = p.key_clearance
+    h = kh - c
+    boss = [(yb - 0.01, zr - kw / 2 + c), (yb - 0.01, zr + kw / 2 - c), (yb + h, zr + kw / 2 - c - h), (yb + h, zr - kw / 2 + c)]
+    # The boss's +Z face is a 45-degree slope so the monitor clamp prints it lying on its front.
+    adds = [m.box(-w, w, ys, yb, z0, z1), m.extrude(boss, -w / 2, w / 2, "X")]
+    # Teardrop toward -Z: the hole is horizontal when the monitor clamp prints on its front.
+    cuts = [m.extrude(m.teardrop(f.m4_clearance / 2, tip_dir=-math.pi / 2), ys - 1, yb + kh + 1, "Y", (0.0, zr)),
+            m.extrude(m.hexagon(f.m4_hex_pocket_af, vertex_dir=0.0), ys - 1, ys + p.saddle_head_pocket, "Y", (0.0, zr))]
+    # Cable-tie slot pair on the strip behind the rail, for a cable running back along Z.
+    sl, sw = p.tie_slot
+    zt = (z0 + zr - p.rail_depth / 2) / 2
+    for x in (-6.0, 6.0):
+        cuts.append(m.box(x - sw / 2, x + sw / 2, ys - 1, yb + 1, zt - sl / 2, zt + sl / 2))
+    return adds, cuts
+
+
+def desk_foot(p: Mount, name="desk_foot"):
+    """Stands the rail on a desk; the pad reaches forward under the cameras and back."""
+    w = p.bracket_width / 2
+    adds, cuts = _saddle(p, *p.saddle_z)
+    fz0, fz1 = p.foot_z
+    outline = [(x, z + (fz0 + fz1) / 2) for x, z in m.rounded_rect(p.bracket_width, fz1 - fz0, 6.0)]
+    adds.append(m.extrude(outline, p.surface_y, p.surface_y + p.foot_thickness, "Y"))
+    return m.solid(name, adds, cuts)
+
+
+def monitor_clamp(p: Mount, side="right"):
+    """Hangs the rail on the monitor's top edge: the saddle rests on the top, a lip hooks
+    over the front bezel, and a sliding rear arm (clamp_arm) closes on the back.
+
+    The arm bolts to an ear beyond the rail end that rises to the rail top, so the arm's
+    knob sits above the monitor. Built for the right end (ear at +X), mirrored for the left.
+    """
+    f = p.fasteners
+    w = p.bracket_width / 2
+    ys = p.surface_y
+    lip0 = p.monitor_front_z + p.felt_thickness
+    lip1 = lip0 + p.lip_thickness
+    adds, cuts = _saddle(p, p.saddle_z[0], lip1)
+    adds.append(m.box(-w, w + p.clamp_ear, ys - p.felt_thickness - p.lip_drop, ys + 0.01, lip0, lip1))
+    # The ear's lower part joins the saddle; its upper part stands 0.2 off the rail end and
+    # 1 mm below the rail top, so a carriage at the end of the rail passes over it.
+    adds.append(m.box(w - 0.01, w + p.clamp_ear, ys, p.rail_bottom_y + 0.01, p.saddle_z[0], lip1))
+    adds.append(m.box(w + 0.2, w + p.clamp_ear, p.rail_bottom_y, p.rail_top_y - 1.0, p.saddle_z[0], lip1))
+    yb, zb = p.clamp_bolt_y, p.clamp_bolt_z
+    cuts.append(m.extrude(m.teardrop(f.m4_clearance / 2, tip_dir=-math.pi / 2), w - 1, w + p.clamp_ear + 1, "X", (yb, zb)))
+    x1 = w + p.clamp_ear - p.clamp_nut_inset
+    corners = f.m4_hex_pocket_af / math.cos(math.radians(30))
+    cuts.append(m.box(x1 - p.rail_nut_pocket, x1, yb - corners / 2 - 0.1, p.rail_top_y,
+                      zb - f.m4_hex_pocket_af / 2, zb + f.m4_hex_pocket_af / 2))
+    ob = m.solid(_side("monitor_clamp", side), adds, cuts)
+    if side == "left":
+        _mirror_x(ob)
+    return ob
+
+
+def clamp_arm(p: Mount, name="clamp_arm"):
+    """Rear jaw of the monitor clamp. Local frame: plate from x = 0 to arm_plate, the leg's
+    inner (monitor-side) face at z = 0, the bar's underside on the monitor-top plane."""
+    f = p.fasteners
+    t = p.arm_plate
+    ys = p.surface_y
+    top = ys + p.arm_bar_height
+    leg = 10.0  # along Z: the leg is the part that bends when the clamp is tightened
+    yb = p.clamp_bolt_y
+    adds = [
+        m.box(0.0, t, ys, top, -leg, p.arm_bar_front),
+        m.box(0.0, t, ys - p.felt_thickness - p.arm_leg_drop, top, -leg, 0.0),
+    ]
+    s0, s1 = p.arm_slot
+    r = f.m4_clearance / 2 + 0.05
+    cuts = [m.box(-1, t + 1, yb - r, yb + r, s0, s1),
+            m.cylinder(r, -1, t + 1, "X", (yb, s0)), m.cylinder(r, -1, t + 1, "X", (yb, s1))]
+    # Monitor-depth scale on the bar's outer top edge, read against the front face of the
+    # clamp's lip (the knob hides the bolt itself): a tick every 10 mm, long every 20 mm.
+    e = p.printing.engrave_depth
+    d0, d1 = p.monitor_depth_range
+    lip_front = p.monitor_front_z + p.felt_thickness + p.lip_thickness
+    for depth in range(int(math.ceil(d0 / 10.0)) * 10, int(d1) + 1, 10):
+        z = s0 + (depth - d0) + (lip_front - p.clamp_bolt_z)
+        cuts.append(m.box(t - e, t + 1, top - (4.0 if depth % 20 == 0 else 2.5), top + 1, z - 0.3, z + 0.3))
     return m.solid(name, adds, cuts)
 
 
@@ -240,16 +343,11 @@ def coupon_pcb(p: Mount, name="coupon_pcb"):
 
 
 def coupon_rail(p: Mount, length=30.0, name="coupon_rail"):
-    """A slice of the rail profile: slot, nut tunnel and cable channel."""
+    """A slice of the rail profile with one bracket nut pocket: slot, tunnel, key groove."""
     zr, d = p.rail_axis_z, p.rail_depth / 2
-    yd, yt = p.desk_y, p.rail_top_y
     L = length / 2
-    adds = [m.box(-L, L, yd, yt, zr - d, zr + d)]
-    cuts = [
-        m.box(-L + 3, L - 3, yt - p.rail_web - 0.5, yt + 1, zr - p.slot_width / 2, zr + p.slot_width / 2),
-        m.box(-L - 1, L + 1, yt - p.rail_web - p.tunnel_height, yt - p.rail_web, zr - p.tunnel_width / 2, zr + p.tunnel_width / 2),
-        m.box(-L - 1, L + 1, yd - 1, yd + p.cable_channel[1], zr - p.cable_channel[0] / 2, zr + p.cable_channel[0] / 2),
-    ]
+    adds = [m.box(-L, L, p.rail_bottom_y, p.rail_top_y, zr - d, zr + d)]
+    cuts = _rail_channels(p, -L, L, L - 3.0) + _rail_nut_pocket(p, 0.0)
     return m.solid(name, adds, cuts)
 
 
@@ -293,6 +391,12 @@ def camera_reference(p: Mount):
     # Plug and the first bend of the USB cable: what must stay clear for connector access.
     plug = m.box(-5.0, 5.0, -3.5, 3.5, zb - cd - 25.0, zb - cd, name="ref_cable_keepout")
     return {"pcb": pcb, "lens": lens, "rear_parts": rear, "connector": conn, "cable_keepout": plug}
+
+
+def monitor_reference(p: Mount, depth, name="ref_monitor"):
+    """A stand-in for the monitor's top edge, in the frame of assembly.monitor_matrix:
+    front face at z = 0, top at y = 0, `depth` deep where the clamp's arm touches."""
+    return m.box(-300.0, 300.0, -350.0, 0.0, -depth, 0.0, name=name)
 
 
 def fov_frustum(p: Mount, length=400.0, name="ref_fov"):

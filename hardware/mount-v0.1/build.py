@@ -22,12 +22,17 @@ import bpy  # noqa: E402
 from lynx_mount import assembly as asm, outputs, parts, validate  # noqa: E402
 from lynx_mount.params import DEFAULT, Mount  # noqa: E402
 
-DISPLAY_POSE = asm.Pose(100.0, asm.Setting(8.0, 12.0), asm.Setting(8.0, 12.0))
+# On the monitor's top edge, turned slightly in and looking down at the user.
+DISPLAY_POSE = asm.Pose(100.0, asm.Setting(8.0, -15.0), asm.Setting(8.0, -15.0), stand="monitor", monitor_depth=30.0)
 
 
 def build_parts(p: Mount):
     built = {
-        "base": parts.base(p),
+        "rail": parts.rail(p),
+        "monitor_clamp_left": parts.monitor_clamp(p, "left"),
+        "monitor_clamp_right": parts.monitor_clamp(p, "right"),
+        "clamp_arm": parts.clamp_arm(p),
+        "desk_foot": parts.desk_foot(p),
         "carriage_left": parts.carriage(p, "left"),
         "carriage_right": parts.carriage(p, "right"),
         "yoke_left": parts.yoke(p, "left"),
@@ -54,6 +59,9 @@ def main(argv):
     built = build_parts(p)
     refs = {k: v for k, v in parts.camera_reference(p).items()}
     fov = parts.fov_frustum(p)
+    monitors = {d: parts.monitor_reference(p, d, name=f"ref_monitor_{d:g}")
+                for stand, d in validate.stand_configs(p) if stand == "monitor"}
+    display_monitor = parts.monitor_reference(p, DISPLAY_POSE.monitor_depth)
 
     report = {"generator": "hardware/mount-v0.1/build.py", "blender": bpy.app.version_string, "parts": {}}
     stl_dir = os.path.join(HERE, "stl")
@@ -68,13 +76,14 @@ def main(argv):
         probe = bpy.data.objects.new("probe", ob.data.copy())
         probe.data.transform(M)
         probe.data.update()
-        pr = validate.print_report(probe, p.printing.bed_xy, p.printing.max_overhang_deg)
+        pr = validate.print_report(probe, p.printing.bed_xyz, p.printing.bed_margin,
+                                  p.printing.max_overhang_deg)
         bpy.data.meshes.remove(probe.data)
         report["parts"][key] = dict(quantity=qty, orientation=why, stl=f"stl/{key}.stl", mesh=health, print=pr)
 
     report["fasteners"] = validate.check_fasteners(p)
     report["ranges"] = validate.check_ranges(p)
-    report["assembly"] = validate.check_assembly(p, built, refs, fov)
+    report["assembly"] = validate.check_assembly(p, built, refs, fov, monitors)
 
     failures = [f"mesh:{k}" for k, v in report["parts"].items() if not v["mesh"]["ok"]]
     failures += [f"bed:{k}" for k, v in report["parts"].items() if not v["print"]["fits_bed"]]
@@ -88,7 +97,9 @@ def main(argv):
     with open(os.path.join(val_dir, "report.json"), "w") as fh:
         json.dump(report, fh, indent=2)
 
-    cols = outputs.build_scene(p, built, refs, fov, DISPLAY_POSE)
+    for ob in monitors.values():
+        bpy.data.meshes.remove(ob.data)
+    cols = outputs.build_scene(p, built, refs, fov, display_monitor, DISPLAY_POSE)
     blend_dir = os.path.join(HERE, "blend")
     os.makedirs(blend_dir, exist_ok=True)
     if "_csg_scratch" in bpy.data.collections:
@@ -96,7 +107,7 @@ def main(argv):
     if not args.no_render:
         render_dir = os.path.join(HERE, "renders")
         os.makedirs(render_dir, exist_ok=True)
-        outputs.render_views(os.path.join(render_dir, ""), cols, p.desk_y, samples=args.samples)
+        outputs.render_views(os.path.join(render_dir, ""), cols, p.surface_y, samples=args.samples)
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(blend_dir, "mount-v0.1.blend"), compress=True)
 
     print(f"build {'OK' if report['ok'] else 'FAILED'} in {time.time() - t0:.1f}s; failures: {failures or 'none'}")

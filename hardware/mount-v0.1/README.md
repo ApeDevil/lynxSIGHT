@@ -12,7 +12,7 @@ Blender 5.2.3 LTS, about 400 MB.
 
 ```bash
 cd hardware/mount-v0.1
-uv run build.py --no-render      # parts, checks, STLs and .blend (~10 s)
+uv run build.py --no-render      # parts, checks, STLs and .blend (~15 s)
 uv run build.py                  # also the Cycles previews (~2-3 min on CPU)
 uv run python -m unittest discover -s tests
 ```
@@ -26,12 +26,12 @@ The build exits non-zero if a check fails.
 |---|---|
 | `lynx_mount/params.py` | Every dimension, in mm and degrees. Each camera dimension is tagged with its source (MFR or ASSUMED), and fit clearances are marked FIT |
 | `lynx_mount/parts.py` | One function per printable part, each built in its own local frame |
-| `lynx_mount/assembly.py` | Rig-frame poses for a given baseline and per-camera yaw and pitch, using the shared conventions |
+| `lynx_mount/assembly.py` | Rig-frame poses for a given baseline, per-camera yaw and pitch, stand (monitor clamp or desk feet) and monitor depth, using the shared conventions |
 | `lynx_mount/validate.py` | Mesh, print, fit, collision-sweep, access and fastener checks |
 | `lynx_mount/outputs.py` | Print orientations, STL writer, the `.blend` scene and the renders |
 | `lynx_mount/mesh.py` | Solid primitives and exact booleans |
 | `stl/` | The printable parts, generated and lying in print orientation |
-| `blend/mount-v0.1.blend` | Collections: Assembly (posed), Camera reference, Keep-outs and FOV, Exploded, Print layout |
+| `blend/mount-v0.1.blend` | Collections: Assembly (on the monitor), Monitor, Camera reference, Keep-outs and FOV, Desk variant, Exploded, Print layout |
 | `renders/` | Previews |
 | `validation/report.json` | Results of the last build's checks |
 

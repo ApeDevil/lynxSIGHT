@@ -2,27 +2,119 @@
   "generator": "hardware/mount-v0.1/build.py",
   "blender": "5.2.3 LTS",
   "parts": {
-    "base": {
+    "rail": {
       "quantity": 1,
-      "orientation": "flat underside on the bed; tunnel and cable channel bridge, no supports",
-      "stl": "stl/base.stl",
+      "orientation": "underside on the bed; the tunnel, key groove and nut pockets print as short bridges",
+      "stl": "stl/rail.stl",
       "mesh": {
         "ok": true,
         "non_manifold_edges": 0,
         "boundary_edges": 0,
         "degenerate_faces": 0,
         "bodies": 1,
-        "volume_cm3": 141.85
+        "volume_cm3": 109.45
       },
       "print": {
         "fits_bed": true,
         "size_mm": [
           216.0,
-          135.0,
+          28.0,
           22.0
         ],
-        "steep_overhang_mm2": 22.2,
-        "bridge_mm2": 3271.5
+        "steep_overhang_mm2": 27.5,
+        "bridge_mm2": 3275.9
+      }
+    },
+    "monitor_clamp_left": {
+      "quantity": 1,
+      "orientation": "front face of the lip on the bed; the key boss has a 45-degree back",
+      "stl": "stl/monitor_clamp_left.stl",
+      "mesh": {
+        "ok": true,
+        "non_manifold_edges": 0,
+        "boundary_edges": 0,
+        "degenerate_faces": 0,
+        "bodies": 1,
+        "volume_cm3": 34.37
+      },
+      "print": {
+        "fits_bed": true,
+        "size_mm": [
+          51.0,
+          44.5,
+          43.5
+        ],
+        "steep_overhang_mm2": 0.0,
+        "bridge_mm2": 129.6
+      }
+    },
+    "monitor_clamp_right": {
+      "quantity": 1,
+      "orientation": "front face of the lip on the bed; the key boss has a 45-degree back",
+      "stl": "stl/monitor_clamp_right.stl",
+      "mesh": {
+        "ok": true,
+        "non_manifold_edges": 0,
+        "boundary_edges": 0,
+        "degenerate_faces": 0,
+        "bodies": 1,
+        "volume_cm3": 34.37
+      },
+      "print": {
+        "fits_bed": true,
+        "size_mm": [
+          51.0,
+          44.5,
+          43.5
+        ],
+        "steep_overhang_mm2": 0.0,
+        "bridge_mm2": 129.6
+      }
+    },
+    "clamp_arm": {
+      "quantity": 2,
+      "orientation": "flat on its side, depth scale up",
+      "stl": "stl/clamp_arm.stl",
+      "mesh": {
+        "ok": true,
+        "non_manifold_edges": 0,
+        "boundary_edges": 0,
+        "degenerate_faces": 0,
+        "bodies": 1,
+        "volume_cm3": 13.68
+      },
+      "print": {
+        "fits_bed": true,
+        "size_mm": [
+          94.0,
+          73.5,
+          6.0
+        ],
+        "steep_overhang_mm2": 0.0,
+        "bridge_mm2": 0.0
+      }
+    },
+    "desk_foot": {
+      "quantity": 2,
+      "orientation": "pad on the bed (only for desk use, instead of the monitor clamps)",
+      "stl": "stl/desk_foot.stl",
+      "mesh": {
+        "ok": true,
+        "non_manifold_edges": 0,
+        "boundary_edges": 0,
+        "degenerate_faces": 0,
+        "bodies": 1,
+        "volume_cm3": 35.53
+      },
+      "print": {
+        "fits_bed": true,
+        "size_mm": [
+          40.0,
+          135.0,
+          13.8
+        ],
+        "steep_overhang_mm2": 0.0,
+        "bridge_mm2": 29.2
       }
     },
     "carriage_left": {
@@ -141,7 +233,7 @@
       }
     },
     "knob": {
-      "quantity": 8,
+      "quantity": 10,
       "orientation": "hex pocket up",
       "stl": "stl/knob.stl",
       "mesh": {
@@ -188,7 +280,7 @@
     },
     "coupon_rail": {
       "quantity": 1,
-      "orientation": "as the base",
+      "orientation": "as the rail",
       "stl": "stl/coupon_rail.stl",
       "mesh": {
         "ok": true,
@@ -196,7 +288,7 @@
         "boundary_edges": 0,
         "degenerate_faces": 0,
         "bodies": 1,
-        "volume_cm3": 13.97
+        "volume_cm3": 15.2
       },
       "print": {
         "fits_bed": true,
@@ -245,12 +337,22 @@
       "yaw": {
         "grip": 11.0,
         "engagement": 3.2,
-        "tip_room": 5.6
+        "tip_room": 15.6
       },
       "pitch": {
         "grip": 11.6,
         "engagement": 3.2,
         "tip_room": 11.75
+      },
+      "bracket_to_rail": {
+        "grip": 10.8,
+        "engagement": 3.2,
+        "tip_room": 1.2
+      },
+      "clamp_arm": {
+        "grip": 9.0,
+        "engagement": 3.2,
+        "tip_room": 1.0
       }
     }
   },
@@ -259,8 +361,12 @@
     "carriage_on_rail_at_max_baseline_mm": 0.0,
     "lock_bolt_in_slot_at_max_baseline_mm": 8.75,
     "standoffs_clear_rear_parts_mm": 2.0,
-    "yaw_knob_clear_of_foot_mm": 5.6,
-    "optical_axis_above_desk_mm": 69.0,
+    "yaw_knob_clear_of_foot_mm": 15.6,
+    "optical_axis_above_support_surface_mm": 79.0,
+    "monitor_depth_range_mm": [
+      12.5,
+      74.5
+    ],
     "baseline_scale_ticks": [
       70.0,
       75.0,
@@ -282,6 +388,16 @@
       155.0,
       160.0
     ],
+    "user_view_on_monitor": {
+      "ok": true,
+      "eyes_below_horizontal_deg": [
+        2.5,
+        24.7
+      ],
+      "suggested_pitch_deg": -13.6,
+      "vfov_deg": 47.3,
+      "margin_deg": 12.5
+    },
     "ok": true
   },
   "assembly": {
@@ -309,7 +425,7 @@
       "ok": true
     },
     "motion": {
-      "poses": 195,
+      "poses": 585,
       "collisions": [],
       "self_test_detects_overlap": true,
       "ok": true
@@ -319,23 +435,53 @@
       "fov_occlusions": [
         {
           "camera": "left",
-          "part": "base",
-          "pose": "baseline 70, left yaw -25 pitch -25, right yaw -25 pitch -25"
-        },
-        {
-          "camera": "right",
-          "part": "base",
-          "pose": "baseline 70, left yaw -25 pitch -25, right yaw -25 pitch -25"
-        },
-        {
-          "camera": "left",
           "part": "carriage_right",
-          "pose": "baseline 70, left yaw +20 pitch -25, right yaw +20 pitch -25"
+          "pose": "desk, baseline 70, left yaw +20 pitch -25, right yaw +20 pitch -25"
         },
         {
           "camera": "right",
           "part": "carriage_left",
-          "pose": "baseline 70, left yaw +20 pitch -25, right yaw +20 pitch -25"
+          "pose": "desk, baseline 70, left yaw +20 pitch -25, right yaw +20 pitch -25"
+        },
+        {
+          "camera": "left",
+          "part": "clamp_arm_left",
+          "pose": "monitor 12.5 mm deep, baseline 70, left yaw -25 pitch -25, right yaw -25 pitch -25"
+        },
+        {
+          "camera": "right",
+          "part": "clamp_arm_right",
+          "pose": "monitor 12.5 mm deep, baseline 70, left yaw -25 pitch -25, right yaw -25 pitch -25"
+        },
+        {
+          "camera": "left",
+          "part": "carriage_right",
+          "pose": "monitor 12.5 mm deep, baseline 70, left yaw +20 pitch -25, right yaw +20 pitch -25"
+        },
+        {
+          "camera": "right",
+          "part": "carriage_left",
+          "pose": "monitor 12.5 mm deep, baseline 70, left yaw +20 pitch -25, right yaw +20 pitch -25"
+        },
+        {
+          "camera": "left",
+          "part": "clamp_arm_left",
+          "pose": "monitor 12.5 mm deep, baseline 100, left yaw -25 pitch -25, right yaw -25 pitch -25"
+        },
+        {
+          "camera": "right",
+          "part": "clamp_arm_right",
+          "pose": "monitor 12.5 mm deep, baseline 100, left yaw -25 pitch -25, right yaw -25 pitch -25"
+        },
+        {
+          "camera": "left",
+          "part": "clamp_arm_left",
+          "pose": "monitor 12.5 mm deep, baseline 160, left yaw -25 pitch -25, right yaw -25 pitch -25"
+        },
+        {
+          "camera": "right",
+          "part": "clamp_arm_right",
+          "pose": "monitor 12.5 mm deep, baseline 160, left yaw -25 pitch -25, right yaw -25 pitch -25"
         }
       ]
     }
