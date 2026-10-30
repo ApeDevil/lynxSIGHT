@@ -70,27 +70,33 @@ def camera_frames(p: Mount, pose: Pose, side):
     return carriage, yoke, holder
 
 
-def knob_mounts(p: Mount, side):
-    """Knob placements: (instance suffix, frame it rides on, local matrix).
+def _rz(deg):
+    return Matrix.Rotation(math.radians(deg), 4, "Z")
 
-    Each knob's pocket face sits proud of its part by the head/nut height minus the pocket
-    depth, because the steel bears on the part, not the knob.
-    """
+
+SEAT = 0.05  # a screw head or nut stands this far off its bearing face, so contact is not overlap
+
+
+def fastener_mounts(p: Mount, side):
+    """Printed screws, nuts and the PCB keeper of one camera stack:
+    (instance suffix, part key, frame it rides on, local matrix)."""
     f = p.fasteners
-    head_proud = f.m4_head_height - p.knob_pocket_depth
-    nut_proud = f.m4_nut_thickness - p.knob_pocket_depth
-    h = p.knob_height
     sx = SIDES[side]
-    mounts = []
+    zr = p.rail_axis_z
+    nut_low = p.rail_top_y - p.rail_web - SEAT - f.nut_thickness
+    out = []
     for i, x in enumerate((-p.lock_bolt_offset, p.lock_bolt_offset)):
-        # pocket face down onto the carriage top
-        mounts.append((f"rail_lock_{i + 1}", "carriage",
-                       _t(x, p.yoke_bottom_y + head_proud + h, p.rail_axis_z) @ _rx(90)))
-    # under the carriage, pocket face up, holding the yaw nut
-    mounts.append(("yaw", "carriage", _t(0.0, p.rail_top_y - nut_proud - h, 0.0) @ _rx(-90)))
-    # outside the arm, pocket face toward it
-    mounts.append(("pitch", "yoke", _t(sx * (p.arm_outer_x + head_proud + h), 0.0, 0.0) @ _ry(-sx * 90)))
-    return mounts
+        # head on the carriage top, shank down; the nut in the tunnel, corners along the rail
+        out.append((f"rail_lock_{i + 1}", "screw_rail_lock", "carriage",
+                    _t(x, p.yoke_bottom_y + SEAT, zr) @ _rx(90)))
+        out.append((f"rail_lock_{i + 1}", "nut", "carriage", _t(x, nut_low, zr) @ _rx(-90) @ _rz(90)))
+    # head under the carriage, threaded into the yoke base
+    out.append(("yaw", "screw_yaw", "carriage", _t(0.0, p.rail_top_y - SEAT, 0.0) @ _rx(-90)))
+    # head outside the arm; the nut in the holder wall's inner pocket
+    out.append(("pitch", "screw_pitch", "yoke", _t(sx * (p.arm_outer_x + SEAT), 0.0, 0.0) @ _ry(-sx * 90)))
+    out.append(("pitch", "nut", "holder", _t(sx * (p.wall_inner_x + 0.1), 0.0, 0.0) @ _ry(sx * 90)))
+    out.append(("", "pcb_keeper", "holder", Matrix.Identity(4)))
+    return out
 
 
 def instance_matrices(p: Mount, pose: Pose):
@@ -106,19 +112,26 @@ def instance_matrices(p: Mount, pose: Pose):
         out[f"carriage_{side}"] = (f"carriage_{side}", carriage, f"{side}.carriage")
         out[f"yoke_{side}"] = (f"yoke_{side}", yoke, f"{side}.yoke")
         out[f"camera_holder_{side}"] = ("camera_holder", holder, f"{side}.holder")
-        for suffix, rides, local in knob_mounts(p, side):
-            frame = carriage if rides == "carriage" else yoke
-            out[f"knob_{side}_{suffix}"] = ("knob", frame @ local, f"{side}.{rides}")
+        frames = {"carriage": carriage, "yoke": yoke, "holder": holder}
+        for suffix, key, rides, local in fastener_mounts(p, side):
+            kind = "screw" if key.startswith("screw") else key
+            out[f"{kind}_{side}" + (f"_{suffix}" if suffix else "")] = (key, frames[rides] @ local, f"{side}.{rides}")
     return out
 
 
 def stand_matrices(p: Mount, pose: Pose):
-    """The brackets under the rail ends, and for the monitor stand the rear arms and knobs."""
+    """The brackets under the rail ends with their screws, and for the monitor stand the
+    rear arms with their screws and nuts."""
     f = p.fasteners
     out = {}
     L = p.rail_length / 2
+    w = p.bracket_width / 2
     for side, sx in SIDES.items():
-        centre = _t(sx * p.bracket_centre_x, 0.0, 0.0)
+        bx = sx * p.bracket_centre_x
+        centre = _t(bx, 0.0, 0.0)
+        # Head in the saddle's recess, threaded up into the rail floor.
+        out[f"screw_{side}_bracket"] = ("screw_bracket", _t(bx, p.surface_y + p.saddle_head_recess[1] - SEAT,
+                                                            p.rail_axis_z) @ _rx(-90), "static")
         if pose.stand == "desk":
             out[f"desk_foot_{side}"] = ("desk_foot", centre, "static")
             continue
@@ -128,9 +141,10 @@ def stand_matrices(p: Mount, pose: Pose):
         outer = L + p.clamp_ear
         x0 = outer if sx > 0 else -outer - p.arm_plate
         out[f"clamp_arm_{side}"] = ("clamp_arm", _t(x0, 0.0, leg_z), "static")
-        head_proud = f.m4_head_height - p.knob_pocket_depth
-        knob_x = sx * (outer + p.arm_plate + head_proud + p.knob_height)
-        out[f"knob_{side}_clamp"] = ("knob", _t(knob_x, p.clamp_bolt_y, p.clamp_bolt_z) @ _ry(-sx * 90), "static")
+        out[f"screw_{side}_clamp"] = ("screw_clamp", _t(sx * (outer + p.arm_plate + SEAT), p.clamp_bolt_y,
+                                                        p.clamp_bolt_z) @ _ry(-sx * 90), "static")
+        nut_x = bx + sx * (w + p.clamp_ear - p.clamp_nut_inset - SEAT)
+        out[f"nut_{side}_clamp"] = ("nut", _t(nut_x, p.clamp_bolt_y, p.clamp_bolt_z) @ _ry(-sx * 90), "static")
     return out
 
 

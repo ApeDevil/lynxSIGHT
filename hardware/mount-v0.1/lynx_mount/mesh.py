@@ -128,6 +128,75 @@ def text(body, size, depth, name="text", align="CENTER"):
     return ob
 
 
+def thread(r_major, pitch, depth, z0, z1, crest=0.125, root=0.125, chamfer=(True, True),
+           segments=48, steps=16, name="thread"):
+    """Threaded rod along +Z from z0 to z1, axis at the origin: a radially displaced grid
+    with flat, closed ends, so it is a valid solid for booleans.
+
+    The profile over one pitch is a crest flat, a flank, a root flat and a flank; with
+    flank = depth / pitch of the pitch each flank is at 45 degrees, so the thread prints
+    without support standing up. A chamfered end runs down to the minor radius at 45
+    degrees. Used as it is for a screw, and grown by a clearance as the tap that cuts a
+    threaded hole.
+    """
+    r_minor = r_major - depth
+    flank = (1.0 - crest - root) / 2
+
+    def profile(u):
+        u %= 1.0
+        if u < crest:
+            return r_major
+        if u < crest + flank:
+            return r_major - depth * (u - crest) / flank
+        if u < crest + flank + root:
+            return r_minor
+        return r_minor + depth * (u - crest - flank - root) / flank
+
+    rows = max(2, int(math.ceil((z1 - z0) / (pitch / steps))) + 1)
+    bm = bmesh.new()
+    grid = []
+    for k in range(rows):
+        z = z0 + (z1 - z0) * k / (rows - 1)
+        ring = []
+        for i in range(segments):
+            a = 2 * math.pi * i / segments
+            r = profile(z / pitch - i / segments)
+            if chamfer[0]:
+                r = min(r, r_minor + (z - z0))
+            if chamfer[1]:
+                r = min(r, r_minor + (z1 - z))
+            ring.append(bm.verts.new((r * math.cos(a), r * math.sin(a), z)))
+        grid.append(ring)
+    bm.faces.new(list(reversed(grid[0])))
+    bm.faces.new(grid[-1])
+    for k in range(rows - 1):
+        for i in range(segments):
+            j = (i + 1) % segments
+            bm.faces.new((grid[k][i], grid[k][j], grid[k + 1][j], grid[k + 1][i]))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    return _object_from_bmesh(bm, name)
+
+
+def frustum(r0, r1, a0, a1, axis="Z", at=(0, 0), segments=SEGMENTS, name="frustum"):
+    """Truncated cone along `axis`, radius r0 at a0 and r1 at a1 (see cylinder for `at`)."""
+    bm = bmesh.new()
+    def place(u, v, w):
+        if axis == "Z":
+            return (u + at[0], v + at[1], w)
+        if axis == "X":
+            return (w, u + at[0], v + at[1])
+        return (u + at[0], w, v + at[1])
+    lo = [bm.verts.new(place(x, y, a0)) for x, y in circle(r0, segments)]
+    hi = [bm.verts.new(place(x, y, a1)) for x, y in circle(r1, segments)]
+    bm.faces.new(lo)
+    bm.faces.new(list(reversed(hi)))
+    for i in range(segments):
+        j = (i + 1) % segments
+        bm.faces.new((lo[j], lo[i], hi[i], hi[j]))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    return _object_from_bmesh(bm, name)
+
+
 def transform(ob, matrix):
     ob.data.transform(matrix)
     ob.data.update()
@@ -179,6 +248,10 @@ def solid(name, adds, cuts=()):
     bm.from_mesh(base.data)
     bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-4)
     bmesh.ops.dissolve_degenerate(bm, edges=bm.edges, dist=1e-5)
+    # Dissolving can leave a stray wire edge where a thread's tiny facet collapsed.
+    loose = [e for e in bm.edges if not e.link_faces]
+    if loose:
+        bmesh.ops.delete(bm, geom=loose, context="EDGES")
     bm.to_mesh(base.data)
     bm.free()
     return base

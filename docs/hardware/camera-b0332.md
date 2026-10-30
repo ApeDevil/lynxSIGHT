@@ -40,8 +40,10 @@ Two consequences for the experiments:
 | Dimension | Assumed | Used for | How to measure |
 |---|---|---|---|
 | Hole positions | 4 holes at the corners of a 34 × 34 mm square, centred | Standoffs | Calipers, hole edge to hole edge + one diameter. Also check whether a second set exists at 28 × 28 |
-| Hole diameter | 2.2 mm (M2 clearance) | Screw size | Calipers or a drill-bit gauge |
-| PCB thickness | 1.6 mm | Standoff seat | Calipers |
+| Hole diameter | 2.2 mm (M2 clearance) | Nothing: the holder uses no screws | Calipers or a drill-bit gauge |
+| PCB size | 38 × 38 mm | Slide-in slot between the holder walls (0.3 mm play) | Calipers, both directions |
+| PCB thickness | 1.6 mm | Slot between the standoffs and the front ribs (0.25 mm play) | Calipers |
+| Front-face edge strip | Nothing within 1.2 mm of the left and right edges | The front ribs that hold the board | Look at the front: note any part or pad at the edges |
 | Lens axis position | At the PCB centre | Optical centre, baseline | Measure from the barrel edge to two adjacent PCB edges |
 | Lens holder footprint and height | 15 × 15 mm, 10 mm | Fit check | Calipers |
 | Lens barrel diameter | 14.5 mm | Fit check | Calipers on the focus ring |

@@ -54,28 +54,44 @@ class Camera:
 
 @dataclass(frozen=True)
 class Fasteners:
-    """ISO metric hardware; nominal sizes from DIN 933 / DIN 934 / ISO 4762."""
+    """Printed fasteners: one thread for every joint, so the rig needs no bought hardware.
 
-    m4_clearance: float = 4.5  # FIT
-    m4_bolt_length: float = 16.0  # one length for every M4 joint
-    m4_head_af: float = 7.0
-    m4_head_height: float = 2.8
-    m4_nut_af: float = 7.0
-    m4_nut_thickness: float = 3.2
-    m4_hex_pocket_af: float = 7.3  # FIT: hex head/nut press-in
-    m2_clearance: float = 2.4  # FIT
-    m2_screw_length: float = 10.0
-    m2_nut_af: float = 4.0
-    m2_nut_thickness: float = 1.6
-    m2_hex_pocket_af: float = 4.25  # FIT
-    min_thread_engagement: float = 2.8  # ~0.9 x nut thickness counts as full engagement
+    An 8 mm thread with a 2 mm pitch and 45-degree flanks, not ISO: the flanks print
+    without support on screws printed head down and in holes printed vertically, and the
+    coarse pitch survives a 0.4 mm nozzle. Screws have the knob as their head.
+    """
+
+    major: float = 8.0
+    pitch: float = 2.0
+    depth: float = 0.75  # 45-degree flanks: flank length along the axis equals the depth
+    crest: float = 0.125  # fractions of the pitch; the two flanks share the rest
+    root: float = 0.125
+    thread_clearance: float = 0.3  # FIT, radial: a threaded hole is the screw grown by this
+    shank_clearance: float = 8.8  # FIT: plain hole a screw passes through
+    nut_af: float = 13.0
+    nut_thickness: float = 6.0
+    nut_pocket_af: float = 13.3  # FIT: the nut slides in and cannot turn
+    tip_gap: float = 0.5  # a screw stops this short of the end of its thread
+    min_engagement: float = 5.0  # 2.5 turns of thread, enough for a hand-tight joint
+
+    @property
+    def minor(self) -> float:
+        return self.major - 2 * self.depth
+
+    def tap(self) -> dict:
+        """Thread arguments of the tap that cuts a threaded hole."""
+        return dict(r_major=self.major / 2 + self.thread_clearance, pitch=self.pitch, depth=self.depth,
+                    crest=self.crest, root=self.root)
+
+    def rod(self) -> dict:
+        return dict(r_major=self.major / 2, pitch=self.pitch, depth=self.depth, crest=self.crest, root=self.root)
 
 
 @dataclass(frozen=True)
 class Print:
     bed_xyz: tuple = (256.0, 256.0, 256.0)  # Bambu Lab P2S build volume (manufacturer spec)
     bed_margin: float = 5.0  # keep parts this far inside each edge
-    plate_gap: float = 8.0  # between parts on a ready-arranged plate, room for brims and removal
+    plate_gap: float = 6.0  # between parts on a ready-arranged plate, room for removal
     sliding_clearance: float = 0.15  # FIT, per side, keys in slots
     rotating_gap: float = 0.5  # holder wall to yoke arm, before the knob is tightened
     max_overhang_deg: float = 45.0
@@ -99,16 +115,20 @@ class Mount:
     scale_step_baseline: float = 5.0
 
     # --- camera holder (local frame: origin at optical centre, axes as the rig at zero angles)
-    pcb_side_clearance: float = 1.0
+    pcb_side_clearance: float = 0.3  # FIT: the PCB slides down between the side walls
     standoff_height: float = 5.0  # must exceed camera.rear_component_height
+    pcb_slot_clearance: float = 0.25  # FIT: PCB between the standoff tops and the front ribs
+    front_rib: tuple = (1.2, 1.5)  # (reach over the PCB's side edges, thickness along Z)
+    keeper_thickness: float = 2.5  # bar on top of the walls that holds the PCB down
+    keeper_peg: tuple = (3.0, 3.2, 5.0)  # peg diameter, hole diameter (FIT), depth
     standoff_diameter: float = 5.5
     rear_plate_thickness: float = 3.0
     rear_window: float = 26.0  # square opening behind the PCB for the connector and parts
-    holder_wall: float = 6.5
+    holder_wall: float = 8.5  # holds the printed pitch nut in a pocket on its inner face
     holder_height: float = 42.0  # Y extent of the side walls
     holder_front_radius: float = 10.0  # rounded wall end around the pitch axis
-    holder_rear_chamfer: float = 4.0
-    pitch_nut_depth: float = 3.4
+    holder_rear_chamfer: float = 6.0
+    pitch_nut_depth: float = 6.2
     index_fin: tuple = (13.0, 18.0, 5.5)  # r_inner, r_outer, protrusion over the arm
     tie_slot: tuple = (3.6, 1.8)  # cable-tie slot (length, width)
 
@@ -118,7 +138,6 @@ class Mount:
     yoke_disk_radius: float = 20.0
     arm_thickness: float = 8.0
     arm_width: float = 24.0  # along Z, equal to the boss so the boss needs no overhang
-    yaw_head_pocket_depth: float = 3.0
     yaw_pointer_reach: float = 24.0
 
     # --- carriage
@@ -132,11 +151,11 @@ class Mount:
     # --- rail
     rail_length: float = 216.0
     rail_depth: float = 28.0  # along Z
-    rail_height: float = 22.0
+    rail_height: float = 24.0
     rail_web: float = 6.0  # top web above the nut tunnel
-    slot_width: float = 4.4
-    tunnel_width: float = 7.4  # > nut AF 7.0, < corners 8.08: the nut slides but cannot spin
-    tunnel_height: float = 4.5
+    slot_width: float = 9.0  # the screw passes with the shank clearance
+    tunnel_width: float = 13.4  # > nut AF 13.0, < corners 15.0: the nut slides but cannot spin
+    tunnel_height: float = 6.6
     key_channel: tuple = (12.0, 4.0)  # width, height of the groove under the rail that keys the brackets
     rail_axis_z: float = -30.0  # rail centre behind the yaw axes (yaw-axis Z = 0); the yaw knob under
     # the carriage clears the rail's front face, and the lock knobs clear the yoke disk
@@ -148,9 +167,8 @@ class Mount:
     bracket_width: float = 30.0  # along X; the bracket ends flush with the rail end
     saddle_thickness: float = 10.0
     saddle_z: tuple = (-50.0, -8.0)  # saddle extent along rig Z (rail spans -44..-16)
-    saddle_head_pocket: float = 3.0
-    rail_nut_pocket: float = 3.4
-    bracket_blind_hole: float = 3.0  # bolt hole continuing above the rail nut pocket
+    saddle_head_recess: tuple = (16.5, 4.5)  # round recess under the saddle for the screw head (dia, depth)
+    bracket_head: tuple = (15.0, 4.0)  # bracket screw head, a knurled disk with a coin slot (dia, height)
     key_clearance: float = 0.2  # per side, saddle boss in the rail groove
     foot_z: tuple = (-95.0, 40.0)  # desk foot pad extent along rig Z
     foot_thickness: float = 5.0
@@ -165,7 +183,7 @@ class Mount:
     clamp_nut_inset: float = 3.0  # skin between the ear's outer face and its drop-in nut slot
     clamp_knob_clearance: float = 2.0  # arm knob above the monitor's top surface
     arm_plate: float = 6.0  # rear arm thickness along X
-    arm_bar_height: float = 18.0
+    arm_bar_height: float = 20.0
     arm_slot: tuple = (6.0, 68.0)  # slot along the bar, measured forward from the leg's inner face
     arm_leg_drop: float = 50.0  # leg length below the monitor top
     arm_bar_front: float = 84.0  # bar length forward of the leg's inner face; carries the depth scale
@@ -173,7 +191,6 @@ class Mount:
     # --- knob
     knob_diameter: float = 18.0
     knob_height: float = 8.0
-    knob_pocket_depth: float = 2.6  # < head and nut, so the steel bears, not the knob
     knob_lobes: int = 8
 
     # --- where the user's eyes are expected (for the field-of-view check, not the geometry)
@@ -192,6 +209,11 @@ class Mount:
     @property
     def pcb_back_z(self) -> float:
         return self.pcb_front_z - self.camera.pcb_thickness.value
+
+    @property
+    def keeper_z(self) -> float:
+        """Centre of the PCB's thickness: where the keeper's tongue and pegs sit."""
+        return (self.pcb_front_z + self.pcb_back_z) / 2
 
     @property
     def rear_plate_front_z(self) -> float:
@@ -256,6 +278,11 @@ class Mount:
         return (base + s0, base + s1)
 
     @property
+    def rail_floor_thread(self) -> float:
+        """Threaded length from the key groove's ceiling up to the nut tunnel."""
+        return self.rail_height - self.rail_web - self.tunnel_height - self.key_channel[1]
+
+    @property
     def carriage_back_z(self) -> float:
         return self.rail_axis_z - self.rail_depth / 2 + self.scale_strip
 
@@ -271,41 +298,32 @@ class Mount:
 
 
 def fastener_stacks(p: Mount) -> dict:
-    """Thread engagement and tip room of every M4 joint, from the part dimensions.
-
-    grip: material clamped between head and nut; engagement: bolt length inside the nut;
-    tip_room: free space left past the bolt tip before it meets another part.
+    """Every printed screw: its thread length, what it grips, how much thread it engages
+    and the room left past its tip. A screw's length is its grip plus the engagement it
+    needs, less the tip gap, so engagement is the length left inside the nut or hole.
     """
     f = p.fasteners
-    L = f.m4_bolt_length
 
-    def stack(grip, room_past_nut):
-        past_nut = L - grip - f.m4_nut_thickness
-        return dict(grip=grip, engagement=min(L - grip, f.m4_nut_thickness),
-                    tip_room=room_past_nut - max(0.0, past_nut))
+    def stack(grip, thread, room_past):
+        length = grip + thread - f.tip_gap
+        return dict(length=round(length, 2), grip=grip, engagement=round(length - grip, 2),
+                    tip_room=round(room_past + f.tip_gap, 2))
 
-    knob_sink = f.m4_nut_thickness - p.knob_pocket_depth  # nut/head standing proud of the knob
     return {
-        # head under a knob on the carriage -> carriage -> rail web -> nut held in the tunnel
-        "rail_lock": stack(p.carriage_thickness + p.rail_web,
-                           p.tunnel_height - f.m4_nut_thickness),
-        # head in the yoke pocket -> yoke -> carriage -> nut in a knob below the carriage;
-        # the tip leaves through the knob's bore, so the room is the knob's clearance over the foot
-        "yaw": stack((p.yoke_base_thickness - p.yaw_head_pocket_depth) + p.carriage_thickness,
-                     (p.rail_top_y - p.surface_y - p.foot_thickness) - (p.knob_height + knob_sink)),
-        # head under a knob on the arm -> arm -> gap -> holder wall skin -> nut pocket; the tip
-        # enters the holder in front of the PCB, beside the lens
+        # knob on the carriage -> carriage -> rail web -> nut in the tunnel
+        "rail_lock": stack(p.carriage_thickness + p.rail_web, f.nut_thickness, p.tunnel_height - f.nut_thickness),
+        # knob under the carriage -> carriage -> thread in the yoke base
+        "yaw": stack(p.carriage_thickness, p.yoke_base_thickness, 0.0),
+        # knob on the arm -> arm -> gap -> holder wall skin -> nut in the wall's inner pocket;
+        # the tip ends inside the holder, beside the lens
         "pitch": stack(p.arm_thickness + p.printing.rotating_gap + (p.holder_wall - p.pitch_nut_depth),
-                       p.pitch_nut_depth - f.m4_nut_thickness
-                       + p.wall_inner_x - p.camera.lens_barrel_diameter.value / 2),
-        # head in a pocket under the saddle -> saddle -> key boss -> nut in the groove
-        # ceiling; the tip runs on into a blind hole above the nut pocket
-        "bracket_to_rail": stack((p.saddle_thickness - p.saddle_head_pocket) + p.key_channel[1] - p.key_clearance,
-                                 p.rail_nut_pocket - f.m4_nut_thickness + p.bracket_blind_hole),
-        # head under a knob on the rear arm -> arm -> saddle skin -> nut in a drop-in slot;
-        # the tip runs on in the bolt hole across the saddle
-        "clamp_arm": stack(p.arm_plate + p.clamp_nut_inset,
-                           p.clamp_ear - p.clamp_nut_inset - f.m4_nut_thickness),
+                       f.nut_thickness, p.pitch_nut_depth - f.nut_thickness),
+        # head in the saddle's recess -> saddle -> key boss -> thread in the rail floor
+        "bracket": stack(p.saddle_thickness - p.saddle_head_recess[1] + p.key_channel[1] - p.key_clearance,
+                         p.rail_floor_thread, 0.0),
+        # knob on the rear arm -> arm -> ear skin -> nut in the ear's drop-in slot
+        "clamp": stack(p.arm_plate + p.clamp_nut_inset, f.nut_thickness,
+                       p.clamp_ear - p.clamp_nut_inset - f.nut_thickness - 0.4),
     }
 
 
