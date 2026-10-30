@@ -53,16 +53,19 @@ def test_one_frame_is_shared_and_slow_or_failing_functions_are_isolated():
     runners = [ProcessorRunner(p, "cam_left", worker.slot, board) for p in (fast, slow, broken)]
     for r in runners:
         r.start()
+    fast_r, slow_r, broken_r = runners
     worker.start()
-    time.sleep(0.6)
+    # Wait on progress rather than a fixed time, so a loaded machine slows the test, not fails it.
+    assert wait_until(
+        lambda: fast_r.stats.processed > 40 and slow_r.stats.processed >= 5, timeout=20
+    )
     worker.stop()
     for r in runners:
         r.stop()
-    fast_r, slow_r, broken_r = runners
-    # Capture ran at full speed despite a slow and a crashing consumer.
-    assert worker.meter.total_frames > 80
-    assert fast_r.stats.processed > 40
-    assert slow_r.stats.processed < 20 and slow_r.stats.skipped > 30  # skips, never queues
+    # Capture kept going while the slow consumer worked: it skipped frames instead of queueing
+    # them, and the crashing consumer did not stop anything.
+    assert worker.meter.total_frames > 3 * slow_r.stats.processed
+    assert slow_r.stats.skipped > slow_r.stats.processed
     assert broken_r.stats.errors >= 1 and broken_r.stats.processed == 0
     assert "boom" in board.latest("cam_left", "broken").error
     assert board.latest("cam_left", "fast").ok
