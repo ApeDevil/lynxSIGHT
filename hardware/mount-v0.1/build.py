@@ -49,7 +49,7 @@ def build_parts(p: Mount):
 
 
 def write_plates(p: Mount, meshes):
-    """Each plate set arranged on the bed as a .3mf file, one object per part."""
+    """Each plate set nested on the bed as a .3mf file, one object per part."""
     pr = p.printing
     plate_dir = os.path.join(HERE, "plates")
     os.makedirs(plate_dir, exist_ok=True)
@@ -57,27 +57,46 @@ def write_plates(p: Mount, meshes):
         os.remove(os.path.join(plate_dir, old))
     out = {}
     for set_name, keys in plates.PLATE_SETS.items():
-        sizes = []
-        for key, qty in keys.items():
-            vs = meshes[key][0]
-            w, d = (vs.max(axis=0) - vs.min(axis=0))[:2]
-            sizes += [(f"{key}_{i + 1}" if qty > 1 else key, w, d) for i in range(qty)]
-        layout = plates.pack(sizes, pr.bed_xyz[:2], pr.bed_margin, pr.plate_gap)
+        items = [(f"{key}_{i + 1}" if qty > 1 else key, *meshes[key]) for key, qty in keys.items() for i in range(qty)]
+        by_name = {name: (vs, tris) for name, vs, tris in items}
+        layout = plates.pack(items, pr.bed_xyz[:2], pr.bed_margin, pr.plate_gap)
         for n, placed in enumerate(layout, 1):
             objects = []
-            for name, x, y, rotated in placed:
-                key = name if name in meshes else name.rsplit("_", 1)[0]
-                vs, tris = meshes[key]
-                objects.append((name, plates.place(vs, x, y, rotated), tris))
+            for name, turns, corner in placed:
+                vs, tris = by_name[name]
+                objects.append((name, plates.place(vs, turns, corner), tris))
             allv = np.vstack([v for _, v, _ in objects])
             lo, hi = allv.min(axis=0), allv.max(axis=0)
             m = pr.bed_margin - 1e-6
-            fits = bool((lo[:2] >= m).all() and (hi[:2] <= np.array(pr.bed_xyz[:2]) - m).all() and hi[2] <= pr.bed_xyz[2])
+            fits = bool((lo[:2] >= m).all() and (hi[:2] <= np.array(pr.bed_xyz[:2]) - m).all()
+                        and hi[2] <= pr.bed_xyz[2] and apart(objects, pr.plate_gap))
             fname = f"{set_name}.3mf" if len(layout) == 1 else f"{set_name}-{n}.3mf"
             plates.write_3mf(os.path.join(plate_dir, fname), objects)
             out[fname] = dict(parts=[o[0] for o in objects], fits_bed=fits,
                               extent_mm=[round(float(v), 1) for v in hi - lo])
+    # The rig plates must add up to the full monitor rig.
+    rig = {}
+    for set_name, keys in plates.PLATE_SETS.items():
+        if set_name.endswith("coupons"):
+            continue
+        for key, qty in keys.items():
+            rig[key] = rig.get(key, 0) + qty
+    expected = {k: q for k, (_, q, _) in outputs.PRINTS.items() if not k.startswith(("coupon", "desk_foot"))}
+    if rig != expected:
+        out["rig_complete"] = dict(fits_bed=False, plates=rig, expected=expected)
     return out
+
+
+def apart(objects, gap):
+    """No two parts' footprints, each grown by just under half the gap, share a cell."""
+    res = plates.RES
+    r = int(gap / 2 / res) - 1
+    grid = np.zeros((int(600 / res), int(600 / res)), np.int16)
+    for _, vs, tris in objects:
+        g = plates.dilate(plates.footprint(vs, tris, res), r)
+        i, j = (np.floor(vs[:, :2].min(axis=0) / res).astype(int) - r + int(100 / res))
+        grid[i:i + g.shape[0], j:j + g.shape[1]] += g
+    return bool(grid.max() <= 1)
 
 
 def main(argv):

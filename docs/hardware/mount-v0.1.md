@@ -31,7 +31,7 @@ the generator:
   lens axis 12 mm in front of the PCB. Changing an angle therefore does not move the
   optical centre, and the baseline reading holds at any angle.
 - **Height:** the optical axes are **80.5 mm above the monitor's top edge**, or 79 mm
-  above the desk on the feet. The camera bodies sit 22 mm in front of the screen surface.
+  above the desk on the feet. The camera bodies sit 12 mm in front of the screen surface.
 
 **Is the user in view from the monitor top?** Assume the eyes are 500–700 mm from the
 screen, between 150 mm below and 50 mm above the screen's top edge. The eyes are then
@@ -82,23 +82,22 @@ each has full nut engagement and room for the bolt tip.
 The P2S build volume is **256 × 256 × 256 mm** ([manufacturer spec via retailer][p2s1],
 [second listing][p2s2]). The build checks every part against that volume, keeping 5 mm
 inside each edge. The largest part is the rail at 216 × 28 × 22 mm, and the next is a
-desk foot at 40 × 135 mm.
+desk foot at 30 × 135 mm.
 
 [p2s1]: https://www.gigaparts.com/bambu-lab-p2s-3d-printer.html
 [p2s2]: https://www.makerpoint.nl/en-gb/3d-printing/3d-printers/bambu-lab-all/bambu-lab-p2s-210000007716
 
 **Ready-made plates.** Open the files in `hardware/mount-v0.1/plates/` in Bambu Studio,
-one plate each, in this order:
+in this order:
 
 | Plate | Contents | Use |
 |---|---|---|
 | `1-coupons.3mf` | `coupon_pcb`, `coupon_rail`, `coupon_slider`, 1 knob | Check the fit first (next section) |
-| `2-base.3mf` | Rail, both monitor clamps, 2 clamp arms, 4 knobs | Knobs for the clamp arms and the bracket bolts |
-| `3-cameras.3mf` | Both carriages, both yokes, 2 camera holders, 6 knobs | Knobs for the rail locks, yaw and pitch |
+| `2-mount.3mf` | The whole monitor rig: rail, both clamps, 2 clamp arms, both carriages, both yokes, 2 camera holders, 10 knobs | Everything else, in one print |
 
-Plates 2 and 3 together hold the whole monitor rig, 10 knobs included. Each part
-is a separate object, already in its print orientation and at least 8 mm from its
-neighbours and 5 mm from the bed edge, so don't rotate or re-arrange anything. On a whole plate, the simplest choice is the
+The generator nests parts by their real footprints, not their bounding boxes, so knobs
+fill the corners of the L-shaped clamp arms. Each part is a separate object, already in
+its print orientation and at least 8 mm from its neighbours and 5 mm from the bed edge, so don't rotate or re-arrange anything. On a whole plate, the simplest choice is the
 stronger setting below (4 walls, 30 % gyroid) for every part.
 Desk feet are not on a plate. Print `stl/desk_foot.stl` twice if you want them.
 
@@ -228,10 +227,9 @@ the results are in [`validation/report.json`](../../hardware/mount-v0.1/validati
 
   A self-test confirms that the checker catches a deliberate overlap.
 - **Connector access:** the USB plug-and-cable keep-out hits no other part in any pose.
-- **Field of view:** the monitor never enters the image. Parts enter only at extreme
-  settings that are not used when looking at the user:
-  - at −25° pitch with −25° yaw (looking down and outward), the clamp's rear arm;
-  - at 70 mm baseline, +20° yaw and −25° pitch, the other carriage.
+- **Field of view:** the monitor never enters the image. Only the clamp's rear arm does,
+  at −25° pitch with −25° yaw (looking down and outward), a setting that is not used
+  when looking at the user. The trimmed carriage front no longer enters any image.
 - **User in view:** see *Coordinates and settings* above.
 - **Fasteners:** every M4 joint fully engages its nut (3.2 mm), and every bolt tip has
   room.

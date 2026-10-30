@@ -112,14 +112,26 @@ def _mirror_x(ob):
 
 
 # ------------------------------------------------------------------ carriage
+def _carriage_outline(p: Mount, arc_deg=40.0, chamfer=3.0):
+    """Full width over the rail, where the lock bolts sit; in front of the yaw axis only an
+    arc that carries the yaw scale, tapering back to the full width at the axis."""
+    half, zb, r = p.carriage_width / 2, p.carriage_back_z, p.carriage_front
+    pts = [(-half + chamfer, zb), (half - chamfer, zb), (half, zb + chamfer), (half, 0.0)]
+    n = 16
+    for i in range(n + 1):
+        a = math.radians(arc_deg - 2 * arc_deg * i / n)  # from +X side to -X side
+        pts.append((r * math.sin(a), r * math.cos(a)))
+    pts += [(-half, 0.0), (-half, zb + chamfer)]
+    return pts
+
+
 def carriage(p: Mount, side="right"):
     f = p.fasteners
     sign = 1 if side == "right" else -1
     y0, y1 = p.rail_top_y, p.yoke_bottom_y
     half = p.carriage_width / 2
     zb, zf = p.carriage_back_z, p.carriage_front
-    zc = (zb + zf) / 2
-    plate = m.extrude([(x, z + zc) for x, z in m.rounded_rect(p.carriage_width, zf - zb, 3.0)], y0, y1, "Y")
+    plate = m.extrude(_carriage_outline(p), y0, y1, "Y")
     kw = p.slot_width / 2 - p.printing.sliding_clearance
     key = m.box(-half + 2, half - 2, y0 - p.key_height, y0 + 0.01, p.rail_axis_z - kw, p.rail_axis_z + kw)
     cuts = [m.cylinder(f.m4_clearance / 2, y0 - 5, y1 + 1, "Y", (x, p.rail_axis_z), segments=32)

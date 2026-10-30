@@ -7,7 +7,7 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from lynx_mount.params import DEFAULT, fastener_stacks  # noqa: E402
-from lynx_mount.plates import pack  # noqa: E402
+from lynx_mount.plates import pack, place  # noqa: E402
 
 
 class FastenerStacks(unittest.TestCase):
@@ -63,28 +63,36 @@ class Ranges(unittest.TestCase):
         self.assertEqual(max(t), self.p.yaw_range)
 
 
+def _box(w, d, h):
+    import numpy as np
+    v = np.array([(x, y, z) for z in (0, h) for y in (0, d) for x in (0, w)], float)
+    t = np.array([(0, 2, 1), (1, 2, 3), (4, 5, 6), (5, 7, 6), (0, 1, 4), (1, 5, 4),
+                  (2, 6, 3), (3, 6, 7), (0, 4, 2), (2, 4, 6), (1, 3, 5), (3, 7, 5)])
+    return v, t
+
+
 class Plates(unittest.TestCase):
-    def test_packed_parts_stay_on_the_bed_and_apart(self):
+    def test_nested_parts_stay_on_the_bed_and_apart(self):
         pr = DEFAULT.printing
-        sizes = [("rail", 216, 28)] + [(f"knob_{i}", 22, 22) for i in range(10)] + [(f"arm_{i}", 73.5, 94) for i in range(2)]
-        layout = pack(sizes, pr.bed_xyz[:2], pr.bed_margin, pr.plate_gap)
-        dims = {n: (max(w, d), min(w, d)) for n, w, d in sizes}
+        parts = [("rail", *_box(216, 28, 22))] + [(f"knob_{i}", *_box(18, 18, 8)) for i in range(10)] \
+            + [(f"arm_{i}", *_box(94, 70, 6)) for i in range(2)]
+        layout = pack(parts, pr.bed_xyz[:2], pr.bed_margin, pr.plate_gap)
+        meshes = {n: (v, t) for n, v, t in parts}
         placed = []
         for plate in layout:
             boxes = []
-            for name, x, y, _ in plate:
-                w, d = dims[name]
-                lo, hi = (x - w / 2, y - d / 2), (x + w / 2, y + d / 2)
-                self.assertGreaterEqual(min(lo), pr.bed_margin - 1e-9)
-                self.assertLessEqual(hi[0], pr.bed_xyz[0] - pr.bed_margin + 1e-9)
-                self.assertLessEqual(hi[1], pr.bed_xyz[1] - pr.bed_margin + 1e-9)
+            for name, turns, corner in plate:
+                v = place(meshes[name][0], turns, corner)
+                lo, hi = v.min(axis=0), v.max(axis=0)
+                self.assertGreaterEqual(min(lo[:2]), pr.bed_margin - 1e-9)
+                self.assertTrue((hi[:2] <= [b - pr.bed_margin + 1e-9 for b in pr.bed_xyz[:2]]).all())
                 for blo, bhi in boxes:
-                    apart = (lo[0] >= bhi[0] + pr.plate_gap - 1e-9 or blo[0] >= hi[0] + pr.plate_gap - 1e-9
-                             or lo[1] >= bhi[1] + pr.plate_gap - 1e-9 or blo[1] >= hi[1] + pr.plate_gap - 1e-9)
-                    self.assertTrue(apart, name)
+                    gap = max(lo[0] - bhi[0], blo[0] - hi[0], lo[1] - bhi[1], blo[1] - hi[1])
+                    self.assertGreaterEqual(gap, pr.plate_gap - 1e-9, name)
                 boxes.append((lo, hi))
                 placed.append(name)
-        self.assertCountEqual(placed, dims)
+        self.assertEqual(len(layout), 1)
+        self.assertCountEqual(placed, meshes)
 
 
 if __name__ == "__main__":
