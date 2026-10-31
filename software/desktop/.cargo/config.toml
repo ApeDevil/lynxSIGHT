@@ -1,0 +1,3 @@
+[env]
+# ts-rs writes the TypeScript bindings of the contracts here (`cargo test -p lynx-sight-contracts`).
+TS_RS_EXPORT_DIR = { value = "app/src/lib/contracts", relative = true }

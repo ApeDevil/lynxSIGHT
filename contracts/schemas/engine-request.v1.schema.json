@@ -1,0 +1,1003 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Envelope",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "integer",
+      "format": "uint64",
+      "minimum": 0
+    },
+    "protocol": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0
+    }
+  },
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "client": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "const": "hello"
+        }
+      },
+      "required": [
+        "type",
+        "client"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "source": {
+          "$ref": "#/$defs/SourceSpec"
+        },
+        "type": {
+          "type": "string",
+          "const": "open_source"
+        }
+      },
+      "required": [
+        "type",
+        "source"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "close_source"
+        }
+      },
+      "required": [
+        "type"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "tracking_status"
+        }
+      },
+      "required": [
+        "type"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "span": {
+          "$ref": "#/$defs/TimeSpan"
+        },
+        "stage": {
+          "$ref": "#/$defs/BaselineStage"
+        },
+        "type": {
+          "type": "string",
+          "const": "capture_baseline_stage"
+        }
+      },
+      "required": [
+        "type",
+        "stage",
+        "span"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "finish_baseline"
+        }
+      },
+      "required": [
+        "type"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/$defs/PlanRequest"
+        },
+        "type": {
+          "type": "string",
+          "const": "plan"
+        }
+      },
+      "required": [
+        "type",
+        "request"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "presentation": {
+          "$ref": "#/$defs/Presentation"
+        },
+        "type": {
+          "type": "string",
+          "const": "submit_presentation"
+        }
+      },
+      "required": [
+        "type",
+        "presentation"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "fit_plans": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "scale": {
+          "$ref": "#/$defs/MetricScale"
+        },
+        "type": {
+          "type": "string",
+          "const": "fit"
+        },
+        "validation_plans": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "fit_plans",
+        "validation_plans",
+        "scale"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "model": {
+          "$ref": "#/$defs/GazeModel"
+        },
+        "scale": {
+          "$ref": "#/$defs/MetricScale"
+        },
+        "type": {
+          "type": "string",
+          "const": "evaluate"
+        },
+        "validation_plans": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "model",
+        "validation_plans",
+        "scale"
+      ]
+    },
+    {
+      "description": "Quick recalibration: correct `current` with a few new observations.",
+      "type": "object",
+      "properties": {
+        "current": {
+          "$ref": "#/$defs/GazeModel"
+        },
+        "fit_plans": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "scale": {
+          "$ref": "#/$defs/MetricScale"
+        },
+        "type": {
+          "type": "string",
+          "const": "recalibrate"
+        },
+        "validation_plans": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "current",
+        "fit_plans",
+        "validation_plans",
+        "scale"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "candidate": {
+          "$ref": "#/$defs/GazeModel"
+        },
+        "current": {
+          "$ref": "#/$defs/GazeModel"
+        },
+        "scale": {
+          "$ref": "#/$defs/MetricScale"
+        },
+        "type": {
+          "type": "string",
+          "const": "compare"
+        },
+        "validation_plans": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "current",
+        "candidate",
+        "validation_plans",
+        "scale"
+      ]
+    },
+    {
+      "description": "Incremental correction from trusted observations (interface for future drift\ncorrection; the result is a candidate that must still win a `compare`).",
+      "type": "object",
+      "properties": {
+        "current": {
+          "$ref": "#/$defs/GazeModel"
+        },
+        "observations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TrustedObservation"
+          }
+        },
+        "type": {
+          "type": "string",
+          "const": "propose_correction"
+        }
+      },
+      "required": [
+        "type",
+        "current",
+        "observations"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "shutdown"
+        }
+      },
+      "required": [
+        "type"
+      ]
+    }
+  ],
+  "required": [
+    "protocol",
+    "id"
+  ],
+  "$defs": {
+    "BaselineStage": {
+      "oneOf": [
+        {
+          "description": "Hold still facing the screen until a stable face and both eyes are seen.",
+          "type": "string",
+          "const": "detect_stable"
+        },
+        {
+          "description": "Neutral frontal reference: look at the screen centre.",
+          "type": "string",
+          "const": "neutral"
+        },
+        {
+          "description": "Slowly turn and move the head within a comfortable range while looking at the centre.",
+          "type": "string",
+          "const": "pose_range"
+        }
+      ]
+    },
+    "GazeModel": {
+      "description": "A fitted gaze model. Its parameters belong to the engine that fitted it, which validates\nthem; the core stores them without interpreting them.",
+      "type": "object",
+      "properties": {
+        "engine_version": {
+          "type": "string"
+        },
+        "feature_set": {
+          "description": "The feature definition it was fitted on, e.g. `iris-in-eye/v1`.",
+          "type": "string"
+        },
+        "kind": {
+          "description": "e.g. `poly2-head-linear`.",
+          "type": "string"
+        },
+        "kind_version": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "required": [
+        "kind",
+        "kind_version",
+        "feature_set",
+        "engine_version",
+        "parameters"
+      ]
+    },
+    "MetricScale": {
+      "description": "Everything the engine needs to express errors in physical units. Computed by the core's\ngeometry from the display and its pose; the engine does not transform frames itself.",
+      "type": "object",
+      "properties": {
+        "eye_position_mm": {
+          "description": "The eyes' midpoint in the physical display frame (mm), if the screen pose and viewing\ndistance are known.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "number",
+            "format": "double"
+          },
+          "maxItems": 3,
+          "minItems": 3
+        },
+        "height_mm": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        },
+        "height_px": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "width_mm": {
+          "description": "Physical size of the visible image (after rotation), if known.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        },
+        "width_px": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "width_px",
+        "height_px"
+      ]
+    },
+    "NormPoint": {
+      "description": "A point in normalized display coordinates: (0, 0) is the top-left corner of the display's\nvisible image as the user sees it (after rotation), (1, 1) the bottom-right.",
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ]
+    },
+    "PlanRequest": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "aspect": {
+              "description": "Display aspect ratio (width / height), to keep spacing even on screen.",
+              "type": "number",
+              "format": "double"
+            },
+            "dwell_ms": {
+              "description": "Time the target stays after settling.",
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "layout": {
+              "$ref": "#/$defs/StationaryLayout"
+            },
+            "method": {
+              "type": "string",
+              "const": "stationary"
+            },
+            "purpose": {
+              "$ref": "#/$defs/Purpose"
+            },
+            "settle_ms": {
+              "description": "Time after each target appears before samples count (saccade and settling).",
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "method",
+            "purpose",
+            "layout",
+            "settle_ms",
+            "dwell_ms",
+            "aspect"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "aspect": {
+              "type": "number",
+              "format": "double"
+            },
+            "lead_in_ms": {
+              "description": "The target rests at its start for this long before moving.",
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "method": {
+              "type": "string",
+              "const": "pursuit"
+            },
+            "purpose": {
+              "$ref": "#/$defs/Purpose"
+            },
+            "speed": {
+              "description": "Target speed in display heights per second. Comfortable pursuit is slow; about\n0.15-0.3 at typical distances (provisional, to be tuned on hardware).",
+              "type": "number",
+              "format": "double"
+            },
+            "trajectory": {
+              "$ref": "#/$defs/Trajectory"
+            }
+          },
+          "required": [
+            "method",
+            "purpose",
+            "trajectory",
+            "speed",
+            "lead_in_ms",
+            "aspect"
+          ]
+        }
+      ]
+    },
+    "Presentation": {
+      "description": "What was actually shown, reported by the presenter.",
+      "type": "object",
+      "properties": {
+        "clock": {
+          "$ref": "#/$defs/PresentationClock"
+        },
+        "clock_uncertainty_ms": {
+          "description": "Uncertainty of the timestamps as presented-on-glass times, if estimated.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        },
+        "completed": {
+          "description": "False when the user skipped to the end.",
+          "type": "boolean"
+        },
+        "frames": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PresentedFrame"
+          }
+        },
+        "plan_id": {
+          "type": "string"
+        },
+        "spans": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TimeSpan"
+          }
+        }
+      },
+      "required": [
+        "plan_id",
+        "frames",
+        "spans",
+        "completed",
+        "clock"
+      ]
+    },
+    "PresentationClock": {
+      "oneOf": [
+        {
+          "description": "Timestamps were taken on CLOCK_MONOTONIC directly (simulated presenter).",
+          "type": "string",
+          "const": "monotonic"
+        },
+        {
+          "description": "UI timestamps mapped to CLOCK_MONOTONIC by an offset measured at clock sync.",
+          "type": "string",
+          "const": "ui_mapped"
+        }
+      ]
+    },
+    "PresentedFrame": {
+      "description": "One presented frame: from `t_ns` on, the target was drawn at `position`.",
+      "type": "object",
+      "properties": {
+        "position": {
+          "$ref": "#/$defs/NormPoint"
+        },
+        "t_ns": {
+          "description": "CLOCK_MONOTONIC nanoseconds (the same clock as camera frame timestamps).",
+          "type": "integer",
+          "format": "int64"
+        },
+        "target_index": {
+          "description": "For stationary plans: the target's index.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "t_ns",
+        "position"
+      ]
+    },
+    "Purpose": {
+      "description": "What a set of collected samples is used for. Validation data is never used to fit.",
+      "type": "string",
+      "enum": [
+        "fit",
+        "validation"
+      ]
+    },
+    "SourceSpec": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "synthetic"
+            },
+            "scenario": {
+              "$ref": "#/$defs/SyntheticScenario"
+            },
+            "seed": {
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "kind",
+            "scenario",
+            "seed"
+          ]
+        },
+        {
+          "description": "Real cameras as described by a `sight-diag` experiment config (camera device paths,\ncapture mode, processing settings).",
+          "type": "object",
+          "properties": {
+            "experiment_config": {
+              "type": "string"
+            },
+            "kind": {
+              "type": "string",
+              "const": "cameras"
+            }
+          },
+          "required": [
+            "kind",
+            "experiment_config"
+          ]
+        }
+      ]
+    },
+    "StationaryLayout": {
+      "description": "Stationary target layouts.",
+      "oneOf": [
+        {
+          "description": "Centre, the four edge midpoints and the four corners, inset by `margin`.",
+          "type": "object",
+          "properties": {
+            "layout": {
+              "type": "string",
+              "const": "centre_edges_corners"
+            },
+            "margin": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "required": [
+            "layout",
+            "margin"
+          ]
+        },
+        {
+          "description": "A `cols` x `rows` grid inset by `margin`.",
+          "type": "object",
+          "properties": {
+            "cols": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "layout": {
+              "type": "string",
+              "const": "grid"
+            },
+            "margin": {
+              "type": "number",
+              "format": "double"
+            },
+            "rows": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "layout",
+            "cols",
+            "rows",
+            "margin"
+          ]
+        },
+        {
+          "description": "Points between the fit grid's points, for independent validation.",
+          "type": "object",
+          "properties": {
+            "cols": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "layout": {
+              "type": "string",
+              "const": "validation_offset_grid"
+            },
+            "margin": {
+              "type": "number",
+              "format": "double"
+            },
+            "rows": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "layout",
+            "cols",
+            "rows",
+            "margin"
+          ]
+        },
+        {
+          "description": "Explicit points.",
+          "type": "object",
+          "properties": {
+            "layout": {
+              "type": "string",
+              "const": "points"
+            },
+            "points": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/NormPoint"
+              }
+            }
+          },
+          "required": [
+            "layout",
+            "points"
+          ]
+        }
+      ]
+    },
+    "SyntheticDisconnect": {
+      "type": "object",
+      "properties": {
+        "after_ms": {
+          "type": "number",
+          "format": "double"
+        },
+        "camera_id": {
+          "type": "string"
+        },
+        "duration_ms": {
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "required": [
+        "camera_id",
+        "after_ms",
+        "duration_ms"
+      ]
+    },
+    "SyntheticScenario": {
+      "description": "A deterministic simulated user and camera pair, for running every workflow without\nhardware. Synthetic results say nothing about real tracking accuracy.",
+      "type": "object",
+      "properties": {
+        "blink_duration_ms": {
+          "type": "number",
+          "format": "double"
+        },
+        "blink_interval_s": {
+          "description": "Mean time between blinks; 0 disables blinks.",
+          "type": "number",
+          "format": "double"
+        },
+        "cameras": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "disconnects": {
+          "description": "Camera dropouts, relative to `open_source`.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SyntheticDisconnect"
+          }
+        },
+        "display_latency_ms": {
+          "description": "Presentation-to-photon delay not covered by the presentation timestamps.",
+          "type": "number",
+          "format": "double"
+        },
+        "eye_loss_duration_ms": {
+          "type": "number",
+          "format": "double"
+        },
+        "eye_loss_per_min": {
+          "description": "Rate and length of intervals in which one eye is not found.",
+          "type": "number",
+          "format": "double"
+        },
+        "feature_drift": {
+          "description": "Features shift by this much (eye-width units), as if the cameras had moved since\ncalibration: drift that recalibration must correct.",
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "double"
+          },
+          "maxItems": 2,
+          "minItems": 2
+        },
+        "feature_noise": {
+          "description": "Standard deviation of the iris-in-eye features (eye-width units).",
+          "type": "number",
+          "format": "double"
+        },
+        "fps": {
+          "type": "number",
+          "format": "double"
+        },
+        "gaze_offset": {
+          "description": "The simulated user looks this far from every target (a systematic gaze offset).",
+          "$ref": "#/$defs/NormPoint"
+        },
+        "head_period_s": {
+          "type": "number",
+          "format": "double"
+        },
+        "head_rotation_deg": {
+          "type": "number",
+          "format": "double"
+        },
+        "head_translation": {
+          "description": "Head movement: face-centre translation amplitude (normalized image units) and yaw /\npitch amplitude (degrees), with period.",
+          "type": "number",
+          "format": "double"
+        },
+        "pursuit_lag_ms": {
+          "description": "Smooth-pursuit lag of the simulated eye behind the target.",
+          "type": "number",
+          "format": "double"
+        },
+        "pursuit_lapse_fraction": {
+          "description": "Fraction of pursuit time in which the simulated user looks elsewhere.",
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "required": [
+        "cameras",
+        "fps",
+        "feature_noise",
+        "blink_interval_s",
+        "blink_duration_ms",
+        "eye_loss_per_min",
+        "eye_loss_duration_ms",
+        "display_latency_ms",
+        "pursuit_lag_ms",
+        "pursuit_lapse_fraction",
+        "gaze_offset",
+        "feature_drift",
+        "head_translation",
+        "head_rotation_deg",
+        "head_period_s",
+        "disconnects"
+      ]
+    },
+    "TimeSpan": {
+      "description": "A span of time during which the plan was being shown (pauses split a presentation).",
+      "type": "object",
+      "properties": {
+        "end_ns": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "start_ns": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "required": [
+        "start_ns",
+        "end_ns"
+      ]
+    },
+    "Trajectory": {
+      "description": "Smooth-pursuit trajectories.",
+      "oneOf": [
+        {
+          "description": "Archimedean spiral from the centre outwards to `margin` from the edges.",
+          "type": "object",
+          "properties": {
+            "margin": {
+              "type": "number",
+              "format": "double"
+            },
+            "trajectory": {
+              "type": "string",
+              "const": "spiral"
+            },
+            "turns": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "required": [
+            "trajectory",
+            "turns",
+            "margin"
+          ]
+        },
+        {
+          "description": "Back-and-forth horizontal sweeps on `rows` rows, then vertical ones on `cols` columns.",
+          "type": "object",
+          "properties": {
+            "cols": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "margin": {
+              "type": "number",
+              "format": "double"
+            },
+            "rows": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "trajectory": {
+              "type": "string",
+              "const": "sweeps"
+            }
+          },
+          "required": [
+            "trajectory",
+            "rows",
+            "cols",
+            "margin"
+          ]
+        },
+        {
+          "description": "Along the edges, through every corner.",
+          "type": "object",
+          "properties": {
+            "margin": {
+              "type": "number",
+              "format": "double"
+            },
+            "trajectory": {
+              "type": "string",
+              "const": "perimeter"
+            }
+          },
+          "required": [
+            "trajectory",
+            "margin"
+          ]
+        }
+      ]
+    },
+    "TrustSource": {
+      "oneOf": [
+        {
+          "description": "The user explicitly confirmed looking at this point (e.g. a confirm-gaze key).",
+          "type": "string",
+          "const": "explicit_confirmation"
+        },
+        {
+          "description": "A validation target shown by the calibration UI.",
+          "type": "string",
+          "const": "validation_target"
+        }
+      ]
+    },
+    "TrustedObservation": {
+      "description": "An observation trusted enough to correct drift. Ordinary clicks are not trusted: the user\nmay click without looking at the target.",
+      "type": "object",
+      "properties": {
+        "display_stable_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source": {
+          "$ref": "#/$defs/TrustSource"
+        },
+        "t_ns": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "target": {
+          "$ref": "#/$defs/NormPoint"
+        }
+      },
+      "required": [
+        "t_ns",
+        "target",
+        "source"
+      ]
+    }
+  }
+}

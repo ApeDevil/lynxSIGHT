@@ -1,0 +1,22 @@
+[package]
+name = "lynx-sight-session"
+description = "Calibration sessions: the engine process, clocks, workflows, model acceptance and the dry-run pointer"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+lynx-sight-contracts.workspace = true
+lynx-sight-geometry.workspace = true
+lynx-sight-profile.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+rustix.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+
+[lints]
+workspace = true

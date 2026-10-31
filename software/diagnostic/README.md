@@ -1,4 +1,4 @@
-# LYNX SIGHT diagnostic (`sight-diag`)
+# LYNX SIGHT vision: diagnostic (`sight-diag`) and calibration engine (`sight-engine`)
 
 Linux tool for the two Arducam B0332 (OV9281, monochrome, global shutter) UVC cameras: discover
 them, view both streams side by side, measure what they really deliver, and see what face, eye
@@ -103,10 +103,34 @@ fallback and for the near-infrared images where MediaPipe's RGB training may not
 works on the OV9281's images is one of the hardware tests. Head-pose angles and pupil offsets
 are image measurements without camera calibration, not gaze or depth.
 
+## Calibration engine (`sight-engine`)
+
+The same package is the vision side of the desktop calibration app
+([architecture](../../docs/architecture/desktop-calibration.md)). `sight-engine` is started by the
+desktop core and speaks the versioned JSON-lines protocol of [`contracts/`](../../contracts/README.md)
+on stdin/stdout; it is not meant to be run by hand (`uv run sight-engine` waits for requests).
+
+| Module | Owns |
+|---|---|
+| `features.py` | per-frame gaze features: `iris-in-eye/v1` (MediaPipe corners + iris), fallback `pupil-offset/v1` |
+| `baseline.py` | guided face/eye baseline (stable face, neutral reference, pose range), image measurements only |
+| `calibration/targets.py` | stationary layouts and pursuit trajectories (spiral, sweeps, perimeter) at constant on-screen speed |
+| `calibration/quality.py` | sample rejection: missing, low confidence, blinks (padded) |
+| `calibration/alignment.py` | presentation ↔ features: settling, fixation stability, pursuit lag estimation, not-following detection |
+| `calibration/model.py` | gaze model `poly2-head-linear` (reuses `poly_features`), per camera, ridge fit, contract form |
+| `calibration/validation.py` | independent-target accuracy: median, RMS, p90, bias, regions, acceptance; px / mm / deg as the geometry allows |
+| `calibration/recalibration.py` | quick affine correction, paired model comparison, bounded incremental offset |
+| `simulation.py` | deterministic simulated user (noise, blinks, eye loss, head motion, lag, look-aways, offsets, drift, dropouts) |
+| `engine/` | protocol framing, request dispatch, camera and synthetic feature sources, tracking status and guidance |
+
+The camera path runs the diagnostic `Session` unchanged (landmarks raised to 60 Hz for
+calibration) and has not run on the real cameras yet. Everything else is tested with the
+simulated user, which says nothing about real accuracy.
+
 ## Develop
 
 ```bash
-uv run pytest            # 59 tests; synthetic and generated data only, no camera needed
+uv run pytest            # 95 tests; synthetic and generated data only, no camera needed
 uv run ruff check . && uv run ruff format --check .
 ```
 

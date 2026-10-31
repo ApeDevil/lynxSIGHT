@@ -1,0 +1,24 @@
+{
+  "cameras": 2,
+  "fps": 60.0,
+  "feature_noise": 0.004,
+  "blink_interval_s": 4.0,
+  "blink_duration_ms": 150.0,
+  "eye_loss_per_min": 2.0,
+  "eye_loss_duration_ms": 300.0,
+  "display_latency_ms": 20.0,
+  "pursuit_lag_ms": 60.0,
+  "pursuit_lapse_fraction": 0.1,
+  "gaze_offset": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "feature_drift": [
+    0.0,
+    0.0
+  ],
+  "head_translation": 0.02,
+  "head_rotation_deg": 4.0,
+  "head_period_s": 7.0,
+  "disconnects": []
+}

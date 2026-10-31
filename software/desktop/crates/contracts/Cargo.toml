@@ -1,0 +1,16 @@
+[package]
+name = "lynx-sight-contracts"
+description = "Versioned data contracts of LYNX SIGHT: engine protocol, display layout, calibration profile, pointer intent"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+schemars.workspace = true
+ts-rs.workspace = true
+
+[lints]
+workspace = true

@@ -1,0 +1,226 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DisplayLayout",
+  "description": "All displays found, and which discovery sources contributed.",
+  "type": "object",
+  "properties": {
+    "displays": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Display"
+      }
+    },
+    "sources": {
+      "description": "e.g. `[\"platform-window-system\", \"sysfs-edid\"]`.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "warnings": {
+      "description": "Discovery problems that did not stop discovery (no EDID access, no X server, ...).",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "displays",
+    "sources",
+    "warnings"
+  ],
+  "$defs": {
+    "DesktopRect": {
+      "description": "A rectangle in desktop units.",
+      "type": "object",
+      "properties": {
+        "height": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "width": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "x": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "y": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+      ]
+    },
+    "Display": {
+      "description": "One display as the OS presents it.",
+      "type": "object",
+      "properties": {
+        "desktop": {
+          "description": "Where the display sits in the desktop, in desktop units.",
+          "$ref": "#/$defs/DesktopRect"
+        },
+        "id": {
+          "$ref": "#/$defs/DisplayId"
+        },
+        "mode": {
+          "description": "The current mode in device pixels, of the panel in its native orientation.",
+          "$ref": "#/$defs/PixelSize"
+        },
+        "name": {
+          "description": "Human-readable label, e.g. `DEL U2720Q on DP-1`.",
+          "type": "string"
+        },
+        "physical": {
+          "description": "None when neither EDID nor the user supplied a size.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PhysicalSize"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "primary": {
+          "type": "boolean"
+        },
+        "refresh_hz": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        },
+        "rotation": {
+          "$ref": "#/$defs/Rotation"
+        },
+        "scale_factor": {
+          "description": "Device pixels per desktop unit (1.0, 1.25, 2.0, ...).",
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "desktop",
+        "mode",
+        "scale_factor",
+        "rotation",
+        "primary"
+      ]
+    },
+    "DisplayId": {
+      "description": "How a display is recognised again later.",
+      "type": "object",
+      "properties": {
+        "connector": {
+          "description": "The connector it is attached to (`DP-1`, `HDMI-A-1`, `eDP-1`), if known. Changes with\nthe cable.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "stable": {
+          "description": "Stable across reboots and ports when the EDID carries a serial:\n`edid:<manufacturer>-<product code hex>-<serial>`. None when no EDID was found.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "PhysicalSize": {
+      "description": "The active area's physical size, of the panel in its native (unrotated) orientation.",
+      "type": "object",
+      "properties": {
+        "height_mm": {
+          "type": "number",
+          "format": "double"
+        },
+        "provenance": {
+          "$ref": "#/$defs/Provenance"
+        },
+        "width_mm": {
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "required": [
+        "width_mm",
+        "height_mm",
+        "provenance"
+      ]
+    },
+    "PixelSize": {
+      "description": "A size in device pixels.",
+      "type": "object",
+      "properties": {
+        "height": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "width": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "width",
+        "height"
+      ]
+    },
+    "Provenance": {
+      "description": "Where a physical quantity comes from, so estimates are never mistaken for measurements.",
+      "oneOf": [
+        {
+          "description": "Reported by the display's EDID; often rounded, sometimes wrong or zero.",
+          "type": "string",
+          "const": "edid"
+        },
+        {
+          "description": "Reported by the operating system's display API.",
+          "type": "string",
+          "const": "platform"
+        },
+        {
+          "description": "Measured by the user (ruler, calliper) and entered by hand.",
+          "type": "string",
+          "const": "user_measured"
+        },
+        {
+          "description": "Computed from a calibration procedure.",
+          "type": "string",
+          "const": "calibrated"
+        },
+        {
+          "description": "A nominal design value nobody has measured.",
+          "type": "string",
+          "const": "assumed"
+        }
+      ]
+    },
+    "Rotation": {
+      "description": "Panel rotation applied by the OS, clockwise as seen by the user.",
+      "type": "string",
+      "enum": [
+        "deg0",
+        "deg90",
+        "deg180",
+        "deg270"
+      ]
+    }
+  }
+}

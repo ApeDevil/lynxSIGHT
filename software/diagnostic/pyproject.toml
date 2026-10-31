@@ -1,6 +1,6 @@
 [project]
 name = "lynx-sight-diagnostic"
-version = "0.1.0"
+version = "0.2.0"
 description = "LYNX SIGHT v0.1 dual-camera diagnostic tool for Arducam B0332 (OV9281) UVC cameras on Linux"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -19,9 +19,10 @@ landmarks = ["mediapipe>=0.10.21"]
 
 [project.scripts]
 sight-diag = "lynx_sight_diag.cli:main"
+sight-engine = "lynx_sight_diag.engine.server:main"
 
 [dependency-groups]
-dev = ["pytest>=8", "ruff>=0.6"]
+dev = ["pytest>=8", "ruff>=0.6", "jsonschema>=4.23"]
 
 [build-system]
 requires = ["hatchling>=1.25"]

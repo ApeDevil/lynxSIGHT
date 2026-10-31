@@ -1,0 +1,16 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "LYNX SIGHT",
+  "identifier": "io.lynxware.sight",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:1420",
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build"
+  },
+  "app": {
+    "windows": [{ "title": "LYNX SIGHT calibration", "width": 1200, "height": 850 }],
+    "security": { "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'" }
+  },
+  "bundle": { "active": false, "icon": ["icons/icon.png"] }
+}

@@ -1,0 +1,17 @@
+[package]
+name = "lynx-sight-geometry"
+description = "Display discovery and the coordinate transforms between camera, rig, display and desktop"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+lynx-sight-contracts.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+
+[lints]
+workspace = true

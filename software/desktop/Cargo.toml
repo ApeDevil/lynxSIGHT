@@ -1,0 +1,32 @@
+[workspace]
+resolver = "2"
+members = ["crates/contracts", "crates/geometry", "crates/profile", "crates/session", "app/src-tauri"]
+# The Tauri shell needs WebKitGTK system libraries; everything else builds and tests without them.
+default-members = ["crates/contracts", "crates/geometry", "crates/profile", "crates/session"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+rust-version = "1.80"
+
+[workspace.dependencies]
+lynx-sight-contracts = { path = "crates/contracts" }
+lynx-sight-geometry = { path = "crates/geometry" }
+lynx-sight-profile = { path = "crates/profile" }
+lynx-sight-session = { path = "crates/session" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+schemars = "1.2"
+ts-rs = { version = "12", features = ["serde-json-impl", "no-serde-warnings"] }
+thiserror = "2"
+time = { version = "0.3", features = ["formatting", "parsing"] }
+rustix = { version = "1", features = ["time"] }
+tempfile = "3"
+uuid = { version = "1", features = ["v4"] }
+
+[workspace.lints.rust]
+unsafe_code = "deny"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
