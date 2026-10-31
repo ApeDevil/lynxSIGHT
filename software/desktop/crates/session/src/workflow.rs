@@ -90,7 +90,8 @@ pub fn full_steps(aspect: f64) -> Vec<Step> {
             aspect,
         },
     });
-    steps.push(validation_step(4, 3, 0.06, aspect));
+    // 5×4 midpoints: 12 targets in three rows, none on a fit position (the centre included).
+    steps.push(validation_step(5, 4, 0.06, aspect));
     steps.push(Step::Fit);
     steps.push(Step::Review);
     steps

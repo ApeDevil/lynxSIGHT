@@ -184,6 +184,8 @@ pub struct DisplaySetup {
 #[ts(export)]
 pub enum SourceChoice {
     Synthetic {
+        /// A JSON number in the UI: seeds it picks stay far below 2^53.
+        #[ts(type = "number")]
         seed: u64,
         scenario: Option<crate::engine::SyntheticScenario>,
     },

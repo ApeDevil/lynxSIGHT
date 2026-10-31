@@ -1,0 +1,30 @@
+[package]
+name = "lynx-sight-app"
+description = "LYNX SIGHT desktop app: the Tauri shell around the calibration core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish = false
+
+[lib]
+name = "lynx_sight_app"
+path = "src/lib.rs"
+
+[[bin]]
+name = "lynx-sight"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2.5", features = [] }
+
+[dependencies]
+tauri = { version = "2.12", features = [] }
+lynx-sight-contracts.workspace = true
+lynx-sight-geometry.workspace = true
+lynx-sight-profile.workspace = true
+lynx-sight-session.workspace = true
+serde.workspace = true
+
+[lints]
+workspace = true

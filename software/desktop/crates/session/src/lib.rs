@@ -1,5 +1,6 @@
 //! Calibration sessions, from the desktop core's side.
 //!
+//! * [`app`]: the desktop app's commands, wrapped by the Tauri shell.
 //! * [`engine`]: starting `sight-engine` and talking the protocol to it.
 //! * [`clock`]: CLOCK_MONOTONIC, and mapping UI timestamps onto it.
 //! * [`workflow`]: the steps of full calibration and quick recalibration, and the session that
@@ -10,6 +11,7 @@
 //! * [`pointer`]: pointer intent and the dry-run backend (no input is injected).
 
 pub mod acceptance;
+pub mod app;
 pub mod clock;
 pub mod compatibility;
 pub mod demo;
