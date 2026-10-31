@@ -84,5 +84,9 @@ fn default_synthetic_scenario_fixture_is_up_to_date() {
     if std::env::var_os("UPDATE_CONTRACTS").is_some() {
         std::fs::write(&path, &text).unwrap();
     }
-    assert_eq!(std::fs::read_to_string(&path).unwrap(), text, "run UPDATE_CONTRACTS=1 cargo test");
+    assert_eq!(
+        std::fs::read_to_string(&path).unwrap(),
+        text,
+        "run UPDATE_CONTRACTS=1 cargo test"
+    );
 }

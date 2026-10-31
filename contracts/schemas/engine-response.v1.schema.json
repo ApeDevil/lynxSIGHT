@@ -44,6 +44,15 @@
             "$ref": "#/$defs/OpenedCamera"
           }
         },
+        "clock_origin_ns": {
+          "description": "The engine's time origin (CLOCK_MONOTONIC): synthetic events are relative to it.",
+          "type": "integer",
+          "format": "int64"
+        },
+        "feature_set": {
+          "description": "The feature definition this source delivers, e.g. `iris-in-eye/v1`.",
+          "type": "string"
+        },
         "synthetic": {
           "type": "boolean"
         },
@@ -55,7 +64,9 @@
       "required": [
         "type",
         "cameras",
-        "synthetic"
+        "synthetic",
+        "clock_origin_ns",
+        "feature_set"
       ]
     },
     {

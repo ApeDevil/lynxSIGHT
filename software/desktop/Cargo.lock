@@ -144,6 +144,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "lynx-sight-session"
+version = "0.1.0"
+dependencies = [
+ "lynx-sight-contracts",
+ "lynx-sight-geometry",
+ "lynx-sight-profile",
+ "rustix",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror",
+]
+
+[[package]]
 name = "memchr"
 version = "2.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"

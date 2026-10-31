@@ -13,4 +13,12 @@ import type { TargetPlan } from "./TargetPlan";
 import type { TrackingStatus } from "./TrackingStatus";
 import type { ValidationReport } from "./ValidationReport";
 
-export type Response = { "type": "hello", engine_version: string, capabilities: Capabilities, } | { "type": "source_opened", cameras: Array<OpenedCamera>, synthetic: boolean, } | { "type": "tracking_status", status: TrackingStatus, } | { "type": "baseline_stage", result: BaselineStageResult, } | { "type": "baseline", baseline: FaceBaseline, } | { "type": "plan", plan: TargetPlan, } | { "type": "collection", summary: CollectionSummary, } | { "type": "fit", result: FitResult, } | { "type": "validation", report: ValidationReport, } | { "type": "recalibration", result: RecalibrationResult, } | { "type": "comparison", comparison: ModelComparison, } | { "type": "correction_proposal", proposal: CorrectionProposal, } | { "type": "ok" } | { "type": "error", code: ErrorCode, message: string, };
+export type Response = { "type": "hello", engine_version: string, capabilities: Capabilities, } | { "type": "source_opened", cameras: Array<OpenedCamera>, synthetic: boolean, 
+/**
+ * The engine's time origin (CLOCK_MONOTONIC): synthetic events are relative to it.
+ */
+clock_origin_ns: bigint, 
+/**
+ * The feature definition this source delivers, e.g. `iris-in-eye/v1`.
+ */
+feature_set: string, } | { "type": "tracking_status", status: TrackingStatus, } | { "type": "baseline_stage", result: BaselineStageResult, } | { "type": "baseline", baseline: FaceBaseline, } | { "type": "plan", plan: TargetPlan, } | { "type": "collection", summary: CollectionSummary, } | { "type": "fit", result: FitResult, } | { "type": "validation", report: ValidationReport, } | { "type": "recalibration", result: RecalibrationResult, } | { "type": "comparison", comparison: ModelComparison, } | { "type": "correction_proposal", proposal: CorrectionProposal, } | { "type": "ok" } | { "type": "error", code: ErrorCode, message: string, };

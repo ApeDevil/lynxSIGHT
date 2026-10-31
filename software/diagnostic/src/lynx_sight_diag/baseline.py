@@ -68,12 +68,15 @@ class BaselineBuilder:
             return False, "no samples in this time span"
         share = len(good) / len(samples)
         if stage == "detect_stable":
-            if share < 0.8:
-                return False, f"both eyes tracked in {share:.0%} of samples; need 80 %"
+            # Somewhere in the span, one steady second with both eyes: blinks elsewhere in
+            # the span do not matter.
+            best = self._best_window_share(samples, good)
+            if best < 0.9:
+                return False, f"both eyes tracked in at most {best:.0%} of any second; need 90 %"
             jitter = self._jitter(good)
             if jitter is not None and jitter > 0.02:
                 return False, f"face position jitter {jitter:.3f} (image fraction); hold still"
-            return True, f"stable: both eyes tracked in {share:.0%} of samples"
+            return True, f"stable: both eyes tracked in {best:.0%} of the steadiest second"
         if stage == "neutral":
             if len(good) < 20:
                 return False, f"{len(good)} usable neutral samples; need 20"
@@ -83,6 +86,30 @@ class BaselineBuilder:
         if yaw is None and coverage.get("face_x_norm") is None:
             return False, "no head movement observed"
         return True, f"tracked over {share:.0%} of the movement"
+
+    @staticmethod
+    def _best_window_share(samples, good, window_ns: int = 1_000_000_000) -> float:
+        times = sorted(s.t_ns for s in samples)
+        good_times = sorted(s.t_ns for s in good)
+        if not times or times[-1] - times[0] < window_ns:
+            return len(good) / len(samples) if samples else 0.0
+        best = 0.0
+        g0 = g1 = a0 = a1 = 0
+        for start in times:
+            end = start + window_ns
+            if end > times[-1] + 1:
+                break
+            while a0 < len(times) and times[a0] < start:
+                a0 += 1
+            while a1 < len(times) and times[a1] < end:
+                a1 += 1
+            while g0 < len(good_times) and good_times[g0] < start:
+                g0 += 1
+            while g1 < len(good_times) and good_times[g1] < end:
+                g1 += 1
+            if a1 > a0:
+                best = max(best, (g1 - g0) / (a1 - a0))
+        return best
 
     @staticmethod
     def _jitter(samples) -> float | None:

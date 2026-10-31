@@ -209,6 +209,10 @@ pub enum Response {
     SourceOpened {
         cameras: Vec<OpenedCamera>,
         synthetic: bool,
+        /// The engine's time origin (CLOCK_MONOTONIC): synthetic events are relative to it.
+        clock_origin_ns: i64,
+        /// The feature definition this source delivers, e.g. `iris-in-eye/v1`.
+        feature_set: String,
     },
     TrackingStatus {
         status: TrackingStatus,

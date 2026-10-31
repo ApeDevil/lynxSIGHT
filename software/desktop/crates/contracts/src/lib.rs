@@ -7,11 +7,13 @@
 //!   baseline, which the engine produces and the core stores.
 //! * [`profile`]: the persisted calibration profile, versioned by [`PROFILE_SCHEMA_VERSION`].
 //! * [`pointer`]: pointer intent, for the dry-run pointer backend.
+//! * [`app`]: what the desktop core shows the UI.
 //!
 //! JSON Schemas (for the Python engine's tests) and TypeScript types (for the UI) are generated
 //! from these types; see [`schema`] and `contracts/README.md`. Units and coordinate systems are
 //! defined in `docs/architecture/coordinate-systems.md`.
 
+pub mod app;
 pub mod calibration;
 pub mod display;
 pub mod engine;
