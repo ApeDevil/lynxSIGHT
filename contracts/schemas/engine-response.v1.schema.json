@@ -1,0 +1,1588 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Envelope",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "integer",
+      "format": "uint64",
+      "minimum": 0
+    },
+    "protocol": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0
+    }
+  },
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "capabilities": {
+          "$ref": "#/$defs/Capabilities"
+        },
+        "engine_version": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "const": "hello"
+        }
+      },
+      "required": [
+        "type",
+        "engine_version",
+        "capabilities"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "cameras": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OpenedCamera"
+          }
+        },
+        "synthetic": {
+          "type": "boolean"
+        },
+        "type": {
+          "type": "string",
+          "const": "source_opened"
+        }
+      },
+      "required": [
+        "type",
+        "cameras",
+        "synthetic"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/TrackingStatus"
+        },
+        "type": {
+          "type": "string",
+          "const": "tracking_status"
+        }
+      },
+      "required": [
+        "type",
+        "status"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "result": {
+          "$ref": "#/$defs/BaselineStageResult"
+        },
+        "type": {
+          "type": "string",
+          "const": "baseline_stage"
+        }
+      },
+      "required": [
+        "type",
+        "result"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "baseline": {
+          "$ref": "#/$defs/FaceBaseline"
+        },
+        "type": {
+          "type": "string",
+          "const": "baseline"
+        }
+      },
+      "required": [
+        "type",
+        "baseline"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "plan": {
+          "$ref": "#/$defs/TargetPlan"
+        },
+        "type": {
+          "type": "string",
+          "const": "plan"
+        }
+      },
+      "required": [
+        "type",
+        "plan"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "summary": {
+          "$ref": "#/$defs/CollectionSummary"
+        },
+        "type": {
+          "type": "string",
+          "const": "collection"
+        }
+      },
+      "required": [
+        "type",
+        "summary"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "result": {
+          "$ref": "#/$defs/FitResult"
+        },
+        "type": {
+          "type": "string",
+          "const": "fit"
+        }
+      },
+      "required": [
+        "type",
+        "result"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "report": {
+          "$ref": "#/$defs/ValidationReport"
+        },
+        "type": {
+          "type": "string",
+          "const": "validation"
+        }
+      },
+      "required": [
+        "type",
+        "report"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "result": {
+          "$ref": "#/$defs/RecalibrationResult"
+        },
+        "type": {
+          "type": "string",
+          "const": "recalibration"
+        }
+      },
+      "required": [
+        "type",
+        "result"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "comparison": {
+          "$ref": "#/$defs/ModelComparison"
+        },
+        "type": {
+          "type": "string",
+          "const": "comparison"
+        }
+      },
+      "required": [
+        "type",
+        "comparison"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "proposal": {
+          "$ref": "#/$defs/CorrectionProposal"
+        },
+        "type": {
+          "type": "string",
+          "const": "correction_proposal"
+        }
+      },
+      "required": [
+        "type",
+        "proposal"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "ok"
+        }
+      },
+      "required": [
+        "type"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/ErrorCode"
+        },
+        "message": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "const": "error"
+        }
+      },
+      "required": [
+        "type",
+        "code",
+        "message"
+      ]
+    }
+  ],
+  "required": [
+    "protocol",
+    "id"
+  ],
+  "$defs": {
+    "AccuracyMetrics": {
+      "type": "object",
+      "properties": {
+        "bias_x": {
+          "description": "Mean signed error, predicted minus target: + is right / down.",
+          "$ref": "#/$defs/MetricSet"
+        },
+        "bias_y": {
+          "$ref": "#/$defs/MetricSet"
+        },
+        "median": {
+          "$ref": "#/$defs/MetricSet"
+        },
+        "p90": {
+          "$ref": "#/$defs/MetricSet"
+        },
+        "rms": {
+          "$ref": "#/$defs/MetricSet"
+        }
+      },
+      "required": [
+        "median",
+        "rms",
+        "p90",
+        "bias_x",
+        "bias_y"
+      ]
+    },
+    "BaselineStage": {
+      "oneOf": [
+        {
+          "description": "Hold still facing the screen until a stable face and both eyes are seen.",
+          "type": "string",
+          "const": "detect_stable"
+        },
+        {
+          "description": "Neutral frontal reference: look at the screen centre.",
+          "type": "string",
+          "const": "neutral"
+        },
+        {
+          "description": "Slowly turn and move the head within a comfortable range while looking at the centre.",
+          "type": "string",
+          "const": "pose_range"
+        }
+      ]
+    },
+    "BaselineStageResult": {
+      "type": "object",
+      "properties": {
+        "accepted": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "message": {
+          "type": "string"
+        },
+        "ok": {
+          "type": "boolean"
+        },
+        "samples": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "stage": {
+          "$ref": "#/$defs/BaselineStage"
+        }
+      },
+      "required": [
+        "stage",
+        "samples",
+        "accepted",
+        "ok",
+        "message"
+      ]
+    },
+    "CameraBaseline": {
+      "description": "Image-space reference values of one camera in the neutral frontal pose.",
+      "type": "object",
+      "properties": {
+        "camera_id": {
+          "type": "string"
+        },
+        "face_centre_norm": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "number",
+            "format": "double"
+          },
+          "maxItems": 2,
+          "minItems": 2
+        },
+        "interocular_iqr_px": {
+          "description": "Interquartile range of `interocular_px`, a stability indicator.",
+          "$ref": "#/$defs/Metric"
+        },
+        "interocular_px": {
+          "$ref": "#/$defs/Metric"
+        },
+        "iris_in_eye": {
+          "description": "Per eye: iris position within the eye (eye-width units, origin at the corner midpoint).",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EyePoint"
+          }
+        },
+        "openness": {
+          "description": "Per eye: openness (lid opening / eye width) in the neutral pose.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EyeValue"
+          }
+        }
+      },
+      "required": [
+        "camera_id",
+        "interocular_px",
+        "interocular_iqr_px",
+        "openness",
+        "iris_in_eye"
+      ]
+    },
+    "CameraState": {
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "streaming",
+            "starting",
+            "disconnected"
+          ]
+        },
+        {
+          "description": "The synthetic source: no camera involved.",
+          "type": "string",
+          "const": "synthetic"
+        }
+      ]
+    },
+    "CameraTracking": {
+      "type": "object",
+      "properties": {
+        "camera_id": {
+          "type": "string"
+        },
+        "eyes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EyeStatus"
+          }
+        },
+        "face_centre_norm": {
+          "description": "Face centre / image size, 0..1.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "number",
+            "format": "double"
+          },
+          "maxItems": 2,
+          "minItems": 2
+        },
+        "face_confidence": {
+          "$ref": "#/$defs/Metric"
+        },
+        "face_detected": {
+          "type": "boolean"
+        },
+        "fps": {
+          "$ref": "#/$defs/Metric"
+        },
+        "head_pose": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/HeadPose"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "interocular_px": {
+          "description": "Inter-eye distance in pixels (image measurement).",
+          "$ref": "#/$defs/Metric"
+        },
+        "pipeline_latency_ms": {
+          "description": "Capture-to-feature latency of the newest result.",
+          "$ref": "#/$defs/Metric"
+        },
+        "state": {
+          "$ref": "#/$defs/CameraState"
+        }
+      },
+      "required": [
+        "camera_id",
+        "state",
+        "fps",
+        "face_detected",
+        "face_confidence",
+        "eyes",
+        "interocular_px",
+        "pipeline_latency_ms"
+      ]
+    },
+    "Capabilities": {
+      "type": "object",
+      "properties": {
+        "cameras": {
+          "type": "boolean"
+        },
+        "feature_sets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "landmarks": {
+          "type": "boolean"
+        },
+        "model_kinds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "cameras",
+        "landmarks",
+        "feature_sets",
+        "model_kinds"
+      ]
+    },
+    "CollectionSummary": {
+      "description": "The result of aligning one presentation with the tracked features.",
+      "type": "object",
+      "properties": {
+        "estimated_lag_ms": {
+          "description": "Pursuit: estimated delay from presentation to the eye features (display + eye +\ntracking latency).",
+          "$ref": "#/$defs/Metric"
+        },
+        "following_fraction": {
+          "description": "Pursuit: fraction of the presented time in which the eyes followed the target.",
+          "$ref": "#/$defs/Metric"
+        },
+        "plan_id": {
+          "type": "string"
+        },
+        "purpose": {
+          "$ref": "#/$defs/Purpose"
+        },
+        "rejected": {
+          "$ref": "#/$defs/RejectionCounts"
+        },
+        "samples_accepted": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "samples_total": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "targets_total": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "targets_usable": {
+          "description": "Stationary: targets with enough accepted samples.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "plan_id",
+        "purpose",
+        "samples_total",
+        "samples_accepted",
+        "rejected",
+        "estimated_lag_ms",
+        "following_fraction",
+        "warnings"
+      ]
+    },
+    "CorrectionProposal": {
+      "type": "object",
+      "properties": {
+        "candidate": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GazeModel"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "observations_used": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "reason": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "observations_used",
+        "reason"
+      ]
+    },
+    "ErrorCode": {
+      "type": "string",
+      "enum": [
+        "protocol_mismatch",
+        "invalid_request",
+        "no_source",
+        "source_failed",
+        "unknown_plan",
+        "insufficient_data",
+        "model_incompatible",
+        "internal"
+      ]
+    },
+    "EyeLabel": {
+      "description": "Which eye, named by its position in the camera image (`image_left` has the smaller x), not\nby anatomy: the cameras face the user, so the image-left eye is the user's right eye.",
+      "type": "string",
+      "enum": [
+        "image_left",
+        "image_right"
+      ]
+    },
+    "EyePoint": {
+      "type": "object",
+      "properties": {
+        "eye": {
+          "$ref": "#/$defs/EyeLabel"
+        },
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "required": [
+        "eye",
+        "x",
+        "y"
+      ]
+    },
+    "EyeState": {
+      "oneOf": [
+        {
+          "description": "Iris found inside an open eye with sufficient confidence.",
+          "type": "string",
+          "const": "tracked"
+        },
+        {
+          "description": "The eye is closed or nearly closed.",
+          "type": "string",
+          "const": "closed"
+        },
+        {
+          "description": "The face was found but this eye was not (turned away, occluded, out of frame).",
+          "type": "string",
+          "const": "occluded"
+        },
+        {
+          "description": "No face, so no eye either.",
+          "type": "string",
+          "const": "no_face"
+        }
+      ]
+    },
+    "EyeStatus": {
+      "type": "object",
+      "properties": {
+        "confidence": {
+          "description": "Iris/pupil localisation confidence, 0..1, from the detector.",
+          "$ref": "#/$defs/Metric"
+        },
+        "eye": {
+          "$ref": "#/$defs/EyeLabel"
+        },
+        "openness": {
+          "description": "Lid opening divided by eye width (image ratio).",
+          "$ref": "#/$defs/Metric"
+        },
+        "state": {
+          "$ref": "#/$defs/EyeState"
+        }
+      },
+      "required": [
+        "eye",
+        "state",
+        "openness",
+        "confidence"
+      ]
+    },
+    "EyeValue": {
+      "type": "object",
+      "properties": {
+        "eye": {
+          "$ref": "#/$defs/EyeLabel"
+        },
+        "value": {
+          "$ref": "#/$defs/Metric"
+        }
+      },
+      "required": [
+        "eye",
+        "value"
+      ]
+    },
+    "FaceBaseline": {
+      "description": "A user's personal face/eye reference, saved with the profile. Contains derived numbers\nonly: no images, no landmark meshes. Not an identity: nothing here is used to recognise\na person.",
+      "type": "object",
+      "properties": {
+        "cameras": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CameraBaseline"
+          }
+        },
+        "features": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FeatureValidity"
+          }
+        },
+        "inferred": {
+          "$ref": "#/$defs/InferredPhysical"
+        },
+        "observed": {
+          "$ref": "#/$defs/PoseCoverage"
+        },
+        "reliable": {
+          "$ref": "#/$defs/PoseCoverage"
+        },
+        "stages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BaselineStageResult"
+          }
+        }
+      },
+      "required": [
+        "stages",
+        "cameras",
+        "observed",
+        "reliable",
+        "features",
+        "inferred"
+      ]
+    },
+    "FeatureValidity": {
+      "type": "object",
+      "properties": {
+        "feature": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "valid": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "feature",
+        "valid",
+        "reason"
+      ]
+    },
+    "FitResult": {
+      "type": "object",
+      "properties": {
+        "coverage": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PoseCoverage"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "model": {
+          "$ref": "#/$defs/GazeModel"
+        },
+        "training": {
+          "$ref": "#/$defs/TrainingSummary"
+        },
+        "validation": {
+          "$ref": "#/$defs/ValidationReport"
+        }
+      },
+      "required": [
+        "model",
+        "training",
+        "validation"
+      ]
+    },
+    "GazeModel": {
+      "description": "A fitted gaze model. Its parameters belong to the engine that fitted it, which validates\nthem; the core stores them without interpreting them.",
+      "type": "object",
+      "properties": {
+        "engine_version": {
+          "type": "string"
+        },
+        "feature_set": {
+          "description": "The feature definition it was fitted on, e.g. `iris-in-eye/v1`.",
+          "type": "string"
+        },
+        "kind": {
+          "description": "e.g. `poly2-head-linear`.",
+          "type": "string"
+        },
+        "kind_version": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "required": [
+        "kind",
+        "kind_version",
+        "feature_set",
+        "engine_version",
+        "parameters"
+      ]
+    },
+    "Guidance": {
+      "type": "string",
+      "enum": [
+        "face_not_found",
+        "move_left",
+        "move_right",
+        "move_up",
+        "move_down",
+        "move_closer",
+        "move_back",
+        "turn_toward_screen",
+        "open_eyes",
+        "hold_still",
+        "good"
+      ]
+    },
+    "HeadPose": {
+      "description": "Head pose angles as estimated from the image. Uncalibrated: the landmark model assumes a\ncanonical face and a nominal camera, so the angles are indicative.",
+      "type": "object",
+      "properties": {
+        "calibrated": {
+          "type": "boolean"
+        },
+        "pitch_deg": {
+          "type": "number",
+          "format": "double"
+        },
+        "roll_deg": {
+          "type": "number",
+          "format": "double"
+        },
+        "yaw_deg": {
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "required": [
+        "yaw_deg",
+        "pitch_deg",
+        "roll_deg",
+        "calibrated"
+      ]
+    },
+    "InferredPhysical": {
+      "description": "Physical quantities inferred from the baseline. Unavailable until camera geometry is\ncalibrated; never filled from nominal guesses.",
+      "type": "object",
+      "properties": {
+        "eye_distance_from_rig_mm": {
+          "$ref": "#/$defs/Metric"
+        },
+        "interocular_mm": {
+          "$ref": "#/$defs/Metric"
+        }
+      },
+      "required": [
+        "interocular_mm",
+        "eye_distance_from_rig_mm"
+      ]
+    },
+    "Metric": {
+      "description": "A measured or computed number, or the explicit reason it is not available.\n\nUsed instead of placeholder numbers: a quality or accuracy value that cannot be computed\n(no physical display size, too few samples, ...) says so.",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "const": "available"
+            },
+            "value": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "required": [
+            "status",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "reason": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string",
+              "const": "unavailable"
+            }
+          },
+          "required": [
+            "status",
+            "reason"
+          ]
+        }
+      ]
+    },
+    "MetricSet": {
+      "description": "One error statistic in every unit the geometry supports. `px` is always computable (display\npixels); `mm` needs the physical display size; `deg` (visual angle) also needs the eye\nposition relative to the display.",
+      "type": "object",
+      "properties": {
+        "deg": {
+          "$ref": "#/$defs/Metric"
+        },
+        "mm": {
+          "$ref": "#/$defs/Metric"
+        },
+        "px": {
+          "$ref": "#/$defs/Metric"
+        }
+      },
+      "required": [
+        "px",
+        "mm",
+        "deg"
+      ]
+    },
+    "ModelComparison": {
+      "description": "The engine's comparison of a candidate model with the current one, on the same fresh\nvalidation data.",
+      "type": "object",
+      "properties": {
+        "candidate": {
+          "$ref": "#/$defs/ValidationReport"
+        },
+        "current": {
+          "$ref": "#/$defs/ValidationReport"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "verdict": {
+          "$ref": "#/$defs/Verdict"
+        }
+      },
+      "required": [
+        "verdict",
+        "reason",
+        "current",
+        "candidate"
+      ]
+    },
+    "NormPoint": {
+      "description": "A point in normalized display coordinates: (0, 0) is the top-left corner of the display's\nvisible image as the user sees it (after rotation), (1, 1) the bottom-right.",
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ]
+    },
+    "OpenedCamera": {
+      "type": "object",
+      "properties": {
+        "camera_id": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "eyes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EyeLabel"
+          }
+        }
+      },
+      "required": [
+        "camera_id",
+        "description",
+        "eyes"
+      ]
+    },
+    "PathSample": {
+      "description": "A sample of a pursuit path. The presenter interpolates linearly between samples.",
+      "type": "object",
+      "properties": {
+        "position": {
+          "$ref": "#/$defs/NormPoint"
+        },
+        "t_ms": {
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "required": [
+        "t_ms",
+        "position"
+      ]
+    },
+    "PoseCoverage": {
+      "description": "The range of head poses and positions observed, and the part of it with reliable tracking\n(both eyes tracked in at least one camera).",
+      "type": "object",
+      "properties": {
+        "face_x_norm": {
+          "description": "Face centre in normalized image coordinates.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Range"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "face_y_norm": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Range"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pitch_deg": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Range"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pose_source": {
+          "description": "`\"landmarks-uncalibrated\"` (MediaPipe pose angles), `\"eye-line-roll\"` (roll only, from\nthe eye landmarks) or `\"synthetic\"`.",
+          "type": "string"
+        },
+        "roll_deg": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Range"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scale_rel": {
+          "description": "Interocular distance relative to the neutral one: a proxy for distance changes.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Range"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "yaw_deg": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Range"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "pose_source"
+      ]
+    },
+    "Purpose": {
+      "description": "What a set of collected samples is used for. Validation data is never used to fit.",
+      "type": "string",
+      "enum": [
+        "fit",
+        "validation"
+      ]
+    },
+    "Range": {
+      "description": "A closed range of a measured quantity.",
+      "type": "object",
+      "properties": {
+        "max": {
+          "type": "number",
+          "format": "double"
+        },
+        "min": {
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "required": [
+        "min",
+        "max"
+      ]
+    },
+    "RecalibrationResult": {
+      "type": "object",
+      "properties": {
+        "candidate": {
+          "$ref": "#/$defs/GazeModel"
+        },
+        "comparison": {
+          "$ref": "#/$defs/ModelComparison"
+        }
+      },
+      "required": [
+        "candidate",
+        "comparison"
+      ]
+    },
+    "RegionError": {
+      "type": "object",
+      "properties": {
+        "col": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "median": {
+          "$ref": "#/$defs/MetricSet"
+        },
+        "row": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "samples": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "col",
+        "row",
+        "samples",
+        "median"
+      ]
+    },
+    "RejectionCounts": {
+      "description": "Why samples were not used. Counts are of feature samples (one per camera frame).",
+      "type": "object",
+      "properties": {
+        "blink": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "low_confidence": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "missing": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "not_following": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "outside_presentation": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "settling": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "unstable": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "missing",
+        "low_confidence",
+        "blink",
+        "unstable",
+        "not_following",
+        "settling",
+        "outside_presentation"
+      ]
+    },
+    "SampleAcceptance": {
+      "type": "object",
+      "properties": {
+        "acceptance_rate": {
+          "$ref": "#/$defs/Metric"
+        },
+        "accepted": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "rejected": {
+          "$ref": "#/$defs/RejectionCounts"
+        },
+        "total": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "total",
+        "accepted",
+        "rejected",
+        "acceptance_rate"
+      ]
+    },
+    "StationaryTarget": {
+      "type": "object",
+      "properties": {
+        "index": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "position": {
+          "$ref": "#/$defs/NormPoint"
+        }
+      },
+      "required": [
+        "index",
+        "position"
+      ]
+    },
+    "TargetPlan": {
+      "description": "Targets for the UI to present, made by the engine.",
+      "type": "object",
+      "properties": {
+        "body": {
+          "$ref": "#/$defs/TargetPlanBody"
+        },
+        "duration_ms": {
+          "type": "number",
+          "format": "double"
+        },
+        "plan_id": {
+          "type": "string"
+        },
+        "purpose": {
+          "$ref": "#/$defs/Purpose"
+        }
+      },
+      "required": [
+        "plan_id",
+        "purpose",
+        "duration_ms",
+        "body"
+      ]
+    },
+    "TargetPlanBody": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "dwell_ms": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "method": {
+              "type": "string",
+              "const": "stationary"
+            },
+            "settle_ms": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "targets": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/StationaryTarget"
+              }
+            }
+          },
+          "required": [
+            "method",
+            "targets",
+            "settle_ms",
+            "dwell_ms"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "lead_in_ms": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "method": {
+              "type": "string",
+              "const": "pursuit"
+            },
+            "path": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PathSample"
+              }
+            },
+            "trajectory": {
+              "$ref": "#/$defs/Trajectory"
+            }
+          },
+          "required": [
+            "method",
+            "path",
+            "lead_in_ms",
+            "trajectory"
+          ]
+        }
+      ]
+    },
+    "TrackingStatus": {
+      "description": "Tracking quality right now. This is not calibration accuracy: it says whether features\ncan be measured, not whether the gaze estimate is right.",
+      "type": "object",
+      "properties": {
+        "cameras": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CameraTracking"
+          }
+        },
+        "guidance": {
+          "description": "Ordered, most important first; `[Good]` when nothing needs to change.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Guidance"
+          }
+        },
+        "ready": {
+          "description": "True when at least one camera tracks both eyes.",
+          "type": "boolean"
+        },
+        "t_ns": {
+          "description": "CLOCK_MONOTONIC time of the status.",
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "required": [
+        "t_ns",
+        "cameras",
+        "guidance",
+        "ready"
+      ]
+    },
+    "TrainingSummary": {
+      "description": "Fit diagnostics on the training data itself. Not an accuracy measurement.",
+      "type": "object",
+      "properties": {
+        "leave_one_out_rms_px": {
+          "description": "Leave-one-target-out RMS over the fit targets (stationary data only).",
+          "$ref": "#/$defs/Metric"
+        },
+        "samples": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "targets": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "train_rms_px": {
+          "$ref": "#/$defs/Metric"
+        }
+      },
+      "required": [
+        "samples",
+        "targets",
+        "train_rms_px",
+        "leave_one_out_rms_px"
+      ]
+    },
+    "Trajectory": {
+      "description": "Smooth-pursuit trajectories.",
+      "oneOf": [
+        {
+          "description": "Archimedean spiral from the centre outwards to `margin` from the edges.",
+          "type": "object",
+          "properties": {
+            "margin": {
+              "type": "number",
+              "format": "double"
+            },
+            "trajectory": {
+              "type": "string",
+              "const": "spiral"
+            },
+            "turns": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "required": [
+            "trajectory",
+            "turns",
+            "margin"
+          ]
+        },
+        {
+          "description": "Back-and-forth horizontal sweeps on `rows` rows, then vertical ones on `cols` columns.",
+          "type": "object",
+          "properties": {
+            "cols": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "margin": {
+              "type": "number",
+              "format": "double"
+            },
+            "rows": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "trajectory": {
+              "type": "string",
+              "const": "sweeps"
+            }
+          },
+          "required": [
+            "trajectory",
+            "rows",
+            "cols",
+            "margin"
+          ]
+        },
+        {
+          "description": "Along the edges, through every corner.",
+          "type": "object",
+          "properties": {
+            "margin": {
+              "type": "number",
+              "format": "double"
+            },
+            "trajectory": {
+              "type": "string",
+              "const": "perimeter"
+            }
+          },
+          "required": [
+            "trajectory",
+            "margin"
+          ]
+        }
+      ]
+    },
+    "ValidationReport": {
+      "description": "Errors of a model against validation targets.",
+      "type": "object",
+      "properties": {
+        "acceptance": {
+          "$ref": "#/$defs/SampleAcceptance"
+        },
+        "accuracy": {
+          "description": "Unavailable metrics carry the reason (e.g. `ValidationSource::None`).",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AccuracyMetrics"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "latency_ms": {
+          "description": "Delay between presentation and features, from pursuit data if there was any.",
+          "$ref": "#/$defs/Metric"
+        },
+        "region_cols": {
+          "description": "Region grid of `region_cols` x `region_rows`, row-major; regions without validation\nsamples are absent.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "region_rows": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "regions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RegionError"
+          }
+        },
+        "samples": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "source": {
+          "$ref": "#/$defs/ValidationSource"
+        },
+        "targets": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "source",
+        "targets",
+        "samples",
+        "region_cols",
+        "region_rows",
+        "regions",
+        "acceptance",
+        "latency_ms"
+      ]
+    },
+    "ValidationSource": {
+      "oneOf": [
+        {
+          "description": "Targets that were not used for fitting: an accuracy estimate for these conditions.",
+          "type": "string",
+          "const": "independent"
+        },
+        {
+          "description": "No independent data: nothing about real-world accuracy can be said.",
+          "type": "string",
+          "const": "none"
+        }
+      ]
+    },
+    "Verdict": {
+      "oneOf": [
+        {
+          "description": "The candidate is measurably better on the same validation data.",
+          "type": "string",
+          "const": "better"
+        },
+        {
+          "description": "Not measurably different.",
+          "type": "string",
+          "const": "equivalent"
+        },
+        {
+          "description": "The candidate is worse.",
+          "type": "string",
+          "const": "worse"
+        },
+        {
+          "description": "Too little validation data to decide.",
+          "type": "string",
+          "const": "inconclusive"
+        }
+      ]
+    }
+  }
+}

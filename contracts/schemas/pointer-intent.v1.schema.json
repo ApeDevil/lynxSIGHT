@@ -1,0 +1,222 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PointerIntent",
+  "type": "object",
+  "properties": {
+    "action": {
+      "description": "What a real backend would do now.",
+      "$ref": "#/$defs/PointerAction"
+    },
+    "confidence": {
+      "description": "0..1, or None when unknown.",
+      "type": [
+        "number",
+        "null"
+      ],
+      "format": "double"
+    },
+    "display_stable_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "mode": {
+      "$ref": "#/$defs/PointerMode"
+    },
+    "observed_cursor": {
+      "description": "The cursor position, only where the platform lets us read it (often not on Wayland).",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/DesktopPoint"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "state": {
+      "$ref": "#/$defs/IntentState"
+    },
+    "t_ns": {
+      "description": "CLOCK_MONOTONIC time of the gaze estimate.",
+      "type": "integer",
+      "format": "int64"
+    },
+    "target": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/NormPoint"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "target_desktop": {
+      "description": "Where the target is in desktop coordinates, computed with the display layout.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/DesktopPoint"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "t_ns",
+    "mode",
+    "state",
+    "action"
+  ],
+  "$defs": {
+    "DesktopPoint": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ]
+    },
+    "IntentState": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "type": "string",
+              "const": "tracking"
+            }
+          },
+          "required": [
+            "state"
+          ]
+        },
+        {
+          "description": "The newest gaze estimate is older than the staleness limit.",
+          "type": "object",
+          "properties": {
+            "age_ms": {
+              "type": "number",
+              "format": "double"
+            },
+            "state": {
+              "type": "string",
+              "const": "stale"
+            }
+          },
+          "required": [
+            "state",
+            "age_ms"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "type": "string",
+              "const": "lost"
+            }
+          },
+          "required": [
+            "state"
+          ]
+        },
+        {
+          "description": "Manual input happened recently; gaze must not fight it.",
+          "type": "object",
+          "properties": {
+            "state": {
+              "type": "string",
+              "const": "manual_override"
+            }
+          },
+          "required": [
+            "state"
+          ]
+        }
+      ]
+    },
+    "NormPoint": {
+      "description": "A point in normalized display coordinates: (0, 0) is the top-left corner of the display's\nvisible image as the user sees it (after rotation), (1, 1) the bottom-right.",
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ]
+    },
+    "PointerAction": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "const": "none"
+            }
+          },
+          "required": [
+            "action"
+          ]
+        },
+        {
+          "description": "Move the pointer to this desktop point (on an activation key in gaze-assisted mode).",
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "const": "warp"
+            },
+            "to": {
+              "$ref": "#/$defs/DesktopPoint"
+            }
+          },
+          "required": [
+            "action",
+            "to"
+          ]
+        }
+      ]
+    },
+    "PointerMode": {
+      "oneOf": [
+        {
+          "description": "Gaze is ignored; the physical pointer is in charge. The default.",
+          "type": "string",
+          "const": "manual"
+        },
+        {
+          "description": "The pointer jumps near the gaze target only when a physical key asks for it.",
+          "type": "string",
+          "const": "gaze_assisted"
+        },
+        {
+          "description": "Research only: continuous gaze control. Never enabled by default.",
+          "type": "string",
+          "const": "hands_free"
+        }
+      ]
+    }
+  }
+}
