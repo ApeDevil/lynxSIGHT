@@ -42,4 +42,12 @@ Questions the tests answer, needed before choosing the tracking approach:
 
 | Date | Test | Result | Notes |
 |---|---|---|---|
-| | | | |
+| 2026-10-31 | H1 | partial | Ubuntu, kernel 7.0.0-42. GUI backend yes, both models found. `video` group added but session not re-logged; cameras still open via the seat ACL |
+| 2026-10-31 | H2 | pass | Both cameras found once each as capture + metadata nodes, USB 0c45:6366 "Arducam OV9281 USB Camera", both in ports 3-6.3 / 3-6.4 behind one Genesys USB 2.0 hub |
+| 2026-10-31 | H3 | partial | Both cameras report the **same serial `UC762`**: identity must come from the by-path link (USB port) |
+| 2026-10-31 | H4 | pass | MJPG 1280x800 @120/100, 1280x720 @120, 800x600/640x480/320x240 @120/100; YUYV 1280x800 and 1280x720 @10 only. No 60 fps mode (a 60 request negotiates 100). exposure_time_absolute 1-5000 (default 157), gain 0-100, auto_exposure 1 = manual / 3 = auto, power_line_frequency default 60 Hz |
+| 2026-10-31 | H8 | inconclusive | Both cameras ~57-68 fps at every mode, p95 interval 20 ms, <1 % drops, also with a single camera and with 5 ms manual exposure. Run while an unrelated Blender job held all 24 cores at 99 %, so CPU starvation is not ruled out. Two streams on the shared hub gave ~200 "Corrupt JPEG" warnings per 6 s; one camera alone gave 1. Repeat on an idle machine with the cameras on different USB controllers |
+| 2026-10-31 | H8 (repeat) | inconclusive | cam_left moved to root port 3-1 (same controller, no hub); cam_right stays at 3-6.4. Corrupt JPEG warnings 0 (was ~200). Still ~67-68 fps at 1280x800@120 and 640x480@120, <0.3 % drops, Blender still at 98 % CPU |
+| 2026-10-31 | H8 (idle) | camera pass, app limited | Idle PC (~10 % CPU): sight-diag still ~57-68 fps on both cameras, 0 drops, 0 corrupt frames. A bare OpenCV grab loop without decoding gets **120 fps** at 1280x800 from cam_right, with auto exposure and with manual exposure 157. So the cameras deliver 120 fps; the limit is sight-diag's per-frame `cap.read()` (MJPEG decode to BGR, then grey) in the capture thread |
+| 2026-10-31 | H6/H7 | pass (user report) | `view -c exp.yaml` shows both cameras live. Left/right assignment and per-camera fps from the view not yet recorded |
+| 2026-10-31 | H12 | pass (user report, first look) | Face detected (green box) and both eye regions outlined (cyan) in room light. Pupil confidence, iris cross, distance and stability not yet recorded; no snapshots kept |
