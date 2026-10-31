@@ -75,3 +75,14 @@ fn unit_variants_serialize_as_bare_tags() {
         serde_json::from_str(r#"{"protocol":1,"id":1,"type":"ok"}"#).unwrap();
     assert_eq!(ok.body, Response::Ok);
 }
+
+/// The Python engine's `simulation.default_scenario()` is checked against this fixture.
+#[test]
+fn default_synthetic_scenario_fixture_is_up_to_date() {
+    let path = schema_dir().join("../fixtures/synthetic-scenario.default.json");
+    let text = serde_json::to_string_pretty(&SyntheticScenario::default()).unwrap() + "\n";
+    if std::env::var_os("UPDATE_CONTRACTS").is_some() {
+        std::fs::write(&path, &text).unwrap();
+    }
+    assert_eq!(std::fs::read_to_string(&path).unwrap(), text, "run UPDATE_CONTRACTS=1 cargo test");
+}

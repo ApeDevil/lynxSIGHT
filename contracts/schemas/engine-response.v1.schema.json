@@ -1360,6 +1360,10 @@
             "$ref": "#/$defs/Guidance"
           }
         },
+        "mean_image_level": {
+          "description": "Mean image level 0..255 over the cameras (exposure check, environment record).",
+          "$ref": "#/$defs/Metric"
+        },
         "ready": {
           "description": "True when at least one camera tracks both eyes.",
           "type": "boolean"
@@ -1374,7 +1378,8 @@
         "t_ns",
         "cameras",
         "guidance",
-        "ready"
+        "ready",
+        "mean_image_level"
       ]
     },
     "TrainingSummary": {

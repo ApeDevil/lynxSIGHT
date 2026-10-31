@@ -114,6 +114,8 @@ pub struct TrackingStatus {
     pub guidance: Vec<Guidance>,
     /// True when at least one camera tracks both eyes.
     pub ready: bool,
+    /// Mean image level 0..255 over the cameras (exposure check, environment record).
+    pub mean_image_level: Metric,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema, TS)]
