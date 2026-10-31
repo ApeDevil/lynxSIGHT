@@ -1,0 +1,186 @@
+{
+  "schema": "lynx-sight/profile",
+  "schema_version": 1,
+  "profile_id": "31cea00ceee540c091d8a396722090aa",
+  "name": "desk",
+  "created_at": "2026-10-31T20:23:39.277423156Z",
+  "updated_at": "2026-10-31T20:23:39.277547975Z",
+  "software": {
+    "app_version": "0.1.0",
+    "engine_version": "0.2.0",
+    "engine_protocol": 1
+  },
+  "rig": {
+    "source": "synthetic",
+    "baseline_mm": 257.0,
+    "cameras": []
+  },
+  "display": {
+    "display": {
+      "id": {
+        "stable": "edid:DEL-0002-9",
+        "connector": "DP-1"
+      },
+      "name": "U2720Q on DP-1",
+      "desktop": {
+        "x": 0,
+        "y": 0,
+        "width": 2560,
+        "height": 1440
+      },
+      "mode": {
+        "width": 2560,
+        "height": 1440
+      },
+      "refresh_hz": 60.0,
+      "scale_factor": 1.0,
+      "rotation": "deg0",
+      "primary": true,
+      "physical": {
+        "width_mm": 597.0,
+        "height_mm": 336.0,
+        "provenance": "edid"
+      }
+    },
+    "screen_pose": null,
+    "viewing_distance_mm": 600.0,
+    "viewing_distance_provenance": "assumed"
+  },
+  "face_baseline": null,
+  "active": {
+    "record_id": "8b9e2a215da24fada644f159e47e52e9",
+    "workflow": "full",
+    "status": "active",
+    "created_at": "2026-10-31T20:23:39.277533628Z",
+    "model": {
+      "kind": "poly2-head-linear",
+      "kind_version": 1,
+      "feature_set": "iris-in-eye/v1",
+      "engine_version": "0.2.0",
+      "parameters": {
+        "coefficients": [
+          [
+            1.0,
+            0.0
+          ]
+        ]
+      }
+    },
+    "training": null,
+    "validation": {
+      "source": "independent",
+      "targets": 5,
+      "samples": 300,
+      "accuracy": {
+        "median": {
+          "px": {
+            "status": "available",
+            "value": 35.0
+          },
+          "mm": {
+            "status": "unavailable",
+            "reason": "test"
+          },
+          "deg": {
+            "status": "unavailable",
+            "reason": "test"
+          }
+        },
+        "rms": {
+          "px": {
+            "status": "available",
+            "value": 35.0
+          },
+          "mm": {
+            "status": "unavailable",
+            "reason": "test"
+          },
+          "deg": {
+            "status": "unavailable",
+            "reason": "test"
+          }
+        },
+        "p90": {
+          "px": {
+            "status": "available",
+            "value": 35.0
+          },
+          "mm": {
+            "status": "unavailable",
+            "reason": "test"
+          },
+          "deg": {
+            "status": "unavailable",
+            "reason": "test"
+          }
+        },
+        "bias_x": {
+          "px": {
+            "status": "unavailable",
+            "reason": "test"
+          },
+          "mm": {
+            "status": "unavailable",
+            "reason": "test"
+          },
+          "deg": {
+            "status": "unavailable",
+            "reason": "test"
+          }
+        },
+        "bias_y": {
+          "px": {
+            "status": "unavailable",
+            "reason": "test"
+          },
+          "mm": {
+            "status": "unavailable",
+            "reason": "test"
+          },
+          "deg": {
+            "status": "unavailable",
+            "reason": "test"
+          }
+        }
+      },
+      "region_cols": 3,
+      "region_rows": 3,
+      "regions": [],
+      "acceptance": {
+        "total": 400,
+        "accepted": 300,
+        "rejected": {
+          "missing": 0,
+          "low_confidence": 0,
+          "blink": 0,
+          "unstable": 0,
+          "not_following": 0,
+          "settling": 0,
+          "outside_presentation": 0
+        },
+        "acceptance_rate": {
+          "status": "available",
+          "value": 0.75
+        }
+      },
+      "latency_ms": {
+        "status": "unavailable",
+        "reason": "no pursuit data"
+      }
+    },
+    "collections": [],
+    "coverage": null,
+    "environment": {
+      "camera_modes": [
+        "synthetic"
+      ],
+      "mean_image_level": {
+        "status": "unavailable",
+        "reason": "synthetic"
+      },
+      "background_brightness": 0.2,
+      "notes": ""
+    }
+  },
+  "history": []
+}

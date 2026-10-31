@@ -1,8 +1,8 @@
 [workspace]
 resolver = "2"
-members = ["crates/contracts"]
+members = ["crates/contracts", "crates/geometry", "crates/profile"]
 # The Tauri shell needs WebKitGTK system libraries; everything else builds and tests without them.
-default-members = ["crates/contracts"]
+default-members = ["crates/contracts", "crates/geometry", "crates/profile"]
 
 [workspace.package]
 version = "0.1.0"
