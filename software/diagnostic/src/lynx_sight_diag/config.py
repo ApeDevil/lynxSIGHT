@@ -27,10 +27,11 @@ class CaptureSettings:
     fourcc: str = "MJPG"
     width: int = 1280
     height: int = 800
-    fps: float = 60
-    # Driver buffers queued by OpenCV. 1 keeps latency low; the app additionally only ever
-    # processes the newest frame.
-    buffer_size: int = 1
+    fps: float = 120  # the B0332 has no 60 fps mode at 1280x800; a 60 request gets 100
+    # Driver buffers queued by OpenCV. With 1 the camera has nowhere to write while a frame
+    # is being decoded, which capped the B0332 at ~68 of 120 fps (measured 2026-11-01).
+    # 2 delivers the full rate; the app still only ever processes the newest frame.
+    buffer_size: int = 2
     # V4L2 controls by normalised name (see `sight-diag list`), applied after opening,
     # e.g. {auto_exposure: 1, exposure_time_absolute: 100, gain: 0}.
     controls: dict[str, int] = field(default_factory=dict)
@@ -154,8 +155,8 @@ def from_dict(data: dict) -> ExperimentConfig:
         fourcc=fourcc,
         width=int(_number(raw_cap.get("width", 1280), "capture.width", 16, 8192)),
         height=int(_number(raw_cap.get("height", 800), "capture.height", 16, 8192)),
-        fps=_number(raw_cap.get("fps", 60), "capture.fps", 1, 1000),
-        buffer_size=int(_number(raw_cap.get("buffer_size", 1), "capture.buffer_size", 1, 32)),
+        fps=_number(raw_cap.get("fps", 120), "capture.fps", 1, 1000),
+        buffer_size=int(_number(raw_cap.get("buffer_size", 2), "capture.buffer_size", 1, 32)),
         controls=_controls(raw_cap.get("controls"), "capture.controls"),
     )
 
