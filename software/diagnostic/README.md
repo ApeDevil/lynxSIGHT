@@ -76,7 +76,8 @@ camera ─► CaptureWorker (1 thread/camera) ─► FrameSlot: newest frame, sh
                                                └─► landmarks ─┘
 ```
 
-* Each camera is captured once, by its own thread, with a one-buffer driver queue. Frames are
+* Each camera is captured once, by its own thread, with a two-buffer driver queue (one buffer
+  capped the cameras at ~68 of 120 fps). Frames are
   converted to 8-bit grey once (the sensor is monochrome) and shared by reference.
 * Each (camera, function) pair runs in its own thread and always takes the newest frame, at most
   `max_hz` times per second; slower functions skip frames instead of queueing them, so latency

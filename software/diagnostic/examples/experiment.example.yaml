@@ -29,8 +29,8 @@ capture:
   fourcc: MJPG              # MJPG keeps two streams within USB 2.0 bandwidth
   width: 1280
   height: 800
-  fps: 60                   # what was requested; recordings store what was achieved
-  buffer_size: 1
+  fps: 120                  # what was requested; recordings store what was achieved
+  buffer_size: 2            # 1 caps the B0332 at ~68 fps
   controls:                 # names from `sight-diag list`; values are device units
     auto_exposure: 1        # 1 = manual, 3 = automatic (UVC aperture-priority)
     exposure_time_absolute: 100   # UVC unit is 100 us: 100 = 10 ms. Exposure longer than

@@ -10,10 +10,11 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-from . import calibration, overlay
+from . import calibration, features, overlay
 from .capture import State
 from .config import CaptureSettings, ExperimentConfig, ProcessorConfig
 from .processing.eyes import Eyes
+from .processing.landmarks import Landmarks
 from .recorder import Recorder, to_jsonable
 from .session import Session
 
@@ -345,8 +346,9 @@ def run_calibration(
     dwell_s: float = 1.5,
     screen: tuple[int, int] | None = None,
 ) -> dict:
-    """Shows targets full-screen and collects pupil offsets for each. Experimental; see
-    calibration.py for what the result does and does not mean."""
+    """Shows targets full-screen and collects, per camera and eye, the iris-in-eye feature
+    (MediaPipe) and the dark-pupil offset for each. Experimental; see calibration/__init__.py
+    for what the result does and does not mean."""
     name = "LYNX SIGHT calibration"
     cv2.namedWindow(name, cv2.WINDOW_NORMAL)
     cv2.setWindowProperty(name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
@@ -359,12 +361,52 @@ def run_calibration(
     targets = calibration.grid_targets(grid[0], grid[1], width, height)
     session.start()
     samples: list[dict] = []
-    per_target: list[tuple[tuple[int, int], tuple[float, float] | None]] = []
-    seen_tokens: dict[str, int] = {}
+    seen_tokens: dict[tuple[str, str], int] = {}
     aborted = False
+
+    def collect(index: int, target: tuple[int, int]) -> None:
+        for cid in session.cameras:
+            for name_, result in (
+                ("landmarks", session.board.latest(cid, "landmarks")),
+                ("eyes", session.board.latest(cid, "eyes")),
+            ):
+                if result is None or result.data is None:
+                    continue
+                if seen_tokens.get((cid, name_)) == result.frame.seq:
+                    continue
+                seen_tokens[(cid, name_)] = result.frame.seq
+                if isinstance(result.data, Landmarks):
+                    h, w = result.frame.image.shape[:2]
+                    sample = features.from_landmarks(
+                        result.frame.t_capture_ns, cid, result.data.points, (w, h),
+                        result.data.head_pose_deg,
+                    )  # fmt: skip
+                    found = [(e.eye, e.iris, 1.0) for e in sample.tracked_eyes]
+                    feature = features.IRIS_IN_EYE
+                elif isinstance(result.data, Eyes):
+                    found = [
+                        (r.label, r.pupil_offset, r.pupil.confidence)
+                        for r in result.data.regions
+                        if r.pupil_offset and r.pupil and r.pupil.confidence >= 0.3
+                    ]
+                    feature = features.PUPIL_OFFSET
+                else:
+                    continue
+                for eye, offset, confidence in found:
+                    samples.append(
+                        {
+                            "target": index,
+                            "screen": list(target),
+                            "feature": feature,
+                            "camera_id": cid,
+                            "eye": eye,
+                            "offset": [float(offset[0]), float(offset[1])],
+                            "confidence": float(confidence),
+                        }
+                    )
+
     try:
         for index, (tx, ty) in enumerate(targets):
-            offsets: list[tuple[float, float]] = []
             start = time.monotonic()
             while time.monotonic() - start < settle_s + dwell_s:
                 canvas = np.zeros((height, width, 3), np.uint8)
@@ -385,55 +427,30 @@ def run_calibration(
                 if (cv2.waitKey(10) & 0xFF) == 27:
                     aborted = True
                     break
-                if not collecting:
-                    continue
-                for cid in session.cameras:
-                    result = session.board.latest(cid, "eyes")
-                    if result is None or not isinstance(result.data, Eyes):
-                        continue
-                    token = result.frame.seq
-                    if seen_tokens.get(cid) == token:
-                        continue
-                    seen_tokens[cid] = token
-                    for region in result.data.regions:
-                        if region.pupil_offset and region.pupil and region.pupil.confidence >= 0.3:
-                            offsets.append(region.pupil_offset)
-                            samples.append(
-                                {
-                                    "target": index,
-                                    "screen": [tx, ty],
-                                    "camera_id": cid,
-                                    "eye": region.label,
-                                    "offset": list(region.pupil_offset),
-                                    "confidence": region.pupil.confidence,
-                                }
-                            )
+                if collecting:
+                    collect(index, (tx, ty))
             if aborted:
                 break
-            per_target.append(((tx, ty), calibration.mean_offset(offsets)))
     finally:
         session.stop()
         cv2.destroyWindow(name)
 
     out_dir.mkdir(parents=True, exist_ok=True)
-    usable = [(t, o) for t, o in per_target if o is not None]
+    # Each camera, eye and feature set is fitted on its own: pooling them mixes sources with
+    # different biases, which made the first hardware run (2026-11-01) unusable.
+    fits = calibration.fit_sources(samples)
+    best = calibration.best_source(fits)
     report: dict = {
         "experimental": True,
         "screen_px": [width, height],
         "grid": list(grid),
         "targets": len(targets),
-        "targets_with_data": len(usable),
         "aborted": aborted,
+        "best_source": best,
+        "fits": fits,
     }
-    if len(usable) >= 6:
-        fitted = calibration.fit(np.array([o for _, o in usable]), np.array([t for t, _ in usable]))
-        report.update(
-            coefficients=fitted.coefficients.tolist(),
-            train_rmse_px=round(fitted.train_rmse_px, 1),
-            loo_rmse_px=None if fitted.loo_rmse_px is None else round(fitted.loo_rmse_px, 1),
-        )
-    else:
-        report["error"] = "fewer than 6 targets had enough confident pupil samples"
+    if best is None:
+        report["error"] = "no camera/eye had 6 targets with enough samples"
     (out_dir / "calibration.json").write_text(json.dumps(report, indent=2))
     with (out_dir / "samples.jsonl").open("w") as fh:
         for s in samples:

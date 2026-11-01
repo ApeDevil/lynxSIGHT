@@ -8,7 +8,7 @@ rig:
   user_distance_mm: 600.0
 cameras:
   cam_left:
-    device: /dev/v4l/by-path/pci-0000:2a:00.3-usb-0:1:1.0-video-index0
+    device: /dev/v4l/by-path/pci-0000:2a:00.3-usb-0:6.3:1.0-video-index0
     serial: UC762
     yaw_deg: 0.0
     pitch_deg: 0.0
@@ -23,8 +23,8 @@ capture:
   fourcc: MJPG
   width: 1280
   height: 800
-  fps: 60
-  buffer_size: 1
+  fps: 120
+  buffer_size: 2
   controls: {}
 processing:
   quality:
