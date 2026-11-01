@@ -76,3 +76,45 @@ def mean_offset(
         return None
     arr = np.asarray(samples, float)
     return float(np.median(arr[:, 0])), float(np.median(arr[:, 1]))
+
+
+def fit_sources(samples: list[dict], min_samples: int = 5) -> dict[str, dict]:
+    """One fit per signal source, so cameras, eyes and feature sets are never mixed.
+
+    `samples` are dicts with "feature", "camera_id", "eye", "target", "screen" and "offset";
+    the key of each result is "<feature>:<camera_id>/<eye>". Sources with fewer than 6 targets
+    with data get an "error" instead of a fit."""
+    grouped: dict[str, dict[int, list]] = {}
+    screens: dict[int, tuple[float, float]] = {}
+    for s in samples:
+        key = f"{s['feature']}:{s['camera_id']}/{s['eye']}"
+        grouped.setdefault(key, {}).setdefault(s["target"], []).append(tuple(s["offset"]))
+        screens[s["target"]] = tuple(s["screen"])
+    fits: dict[str, dict] = {}
+    for key, per_target in sorted(grouped.items()):
+        usable = [
+            (t, m) for t, offs in sorted(per_target.items())
+            if (m := mean_offset(offs, min_samples)) is not None
+        ]  # fmt: skip
+        entry: dict = {"targets_with_data": len(usable)}
+        if len(usable) >= 6:
+            f = fit(np.array([m for _, m in usable]), np.array([screens[t] for t, _ in usable]))
+            entry.update(
+                train_rmse_px=round(f.train_rmse_px, 1),
+                loo_rmse_px=None if f.loo_rmse_px is None else round(f.loo_rmse_px, 1),
+                coefficients=f.coefficients.tolist(),
+            )
+        else:
+            entry["error"] = "fewer than 6 targets with enough samples"
+        fits[key] = entry
+    return fits
+
+
+def best_source(fits: dict[str, dict]) -> str | None:
+    """The source with the lowest leave-one-out error (train error when LOO is missing)."""
+    scored = [
+        (f.get("loo_rmse_px") or f["train_rmse_px"], key)
+        for key, f in fits.items()
+        if "train_rmse_px" in f
+    ]
+    return min(scored)[1] if scored else None
