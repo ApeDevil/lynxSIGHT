@@ -345,10 +345,20 @@ def run_calibration(
     settle_s: float = 0.8,
     dwell_s: float = 1.5,
     screen: tuple[int, int] | None = None,
+    head_positions: list[str] | None = None,
 ) -> dict:
     """Shows targets full-screen and collects, per camera and eye, the iris-in-eye feature
     (MediaPipe) and the dark-pupil offset for each. Experimental; see calibration/__init__.py
-    for what the result does and does not mean."""
+    for what the result does and does not mean.
+
+    With several `head_positions` the whole grid is shown once per position, and the user moves
+    their head there first. Every MediaPipe result is also kept with its full landmarks
+    (`landmarks.npz`), so stereo and head-compensated models can be evaluated offline
+    (`sight-diag gaze evaluate`)."""
+    from .stereo.evaluate import Recording
+    from .stereo.rig import CAMERA_IDS
+
+    head_positions = head_positions or ["centre"]
     name = "LYNX SIGHT calibration"
     cv2.namedWindow(name, cv2.WINDOW_NORMAL)
     cv2.setWindowProperty(name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
@@ -363,8 +373,11 @@ def run_calibration(
     samples: list[dict] = []
     seen_tokens: dict[tuple[str, str], int] = {}
     aborted = False
+    raw: dict[str, list] = {k: [] for k in ("t_ns", "camera", "target", "position", "points")}
+    image_size: tuple[int, int] | None = None
 
-    def collect(index: int, target: tuple[int, int]) -> None:
+    def collect(index: int, target: tuple[int, int], position: int) -> None:
+        nonlocal image_size
         for cid in session.cameras:
             for name_, result in (
                 ("landmarks", session.board.latest(cid, "landmarks")),
@@ -383,6 +396,13 @@ def run_calibration(
                     )  # fmt: skip
                     found = [(e.eye, e.iris, 1.0) for e in sample.tracked_eyes]
                     feature = features.IRIS_IN_EYE
+                    if cid in CAMERA_IDS and len(result.data.points) >= 478:
+                        image_size = (w, h)
+                        raw["t_ns"].append(result.frame.t_capture_ns)
+                        raw["camera"].append(CAMERA_IDS.index(cid))
+                        raw["target"].append(index)
+                        raw["position"].append(position)
+                        raw["points"].append(np.asarray(result.data.points[:478], np.float32))
                 elif isinstance(result.data, Eyes):
                     found = [
                         (r.label, r.pupil_offset, r.pupil.confidence)
@@ -397,6 +417,7 @@ def run_calibration(
                         {
                             "target": index,
                             "screen": list(target),
+                            "head_position": head_positions[position],
                             "feature": feature,
                             "camera_id": cid,
                             "eye": eye,
@@ -405,30 +426,47 @@ def run_calibration(
                         }
                     )
 
-    try:
-        for index, (tx, ty) in enumerate(targets):
-            start = time.monotonic()
-            while time.monotonic() - start < settle_s + dwell_s:
-                canvas = np.zeros((height, width, 3), np.uint8)
-                collecting = time.monotonic() - start >= settle_s
-                cv2.circle(canvas, (tx, ty), 18, (0, 0, 255) if not collecting else (0, 255, 0), 2)
-                cv2.circle(canvas, (tx, ty), 3, (255, 255, 255), -1)
+    def wait_for_position(position: int) -> bool:
+        """Instruction screen before each head position; False when aborted."""
+        lines = [
+            f"head position {position + 1}/{len(head_positions)}: "
+            + head_positions[position].upper(),
+            "move your head there and keep it there; follow the dots with your eyes",
+            "space: start    Esc: abort",
+        ]
+        while True:
+            canvas = np.zeros((height, width, 3), np.uint8)
+            for k, text in enumerate(lines):
                 cv2.putText(
                     canvas,
-                    f"target {index + 1}/{len(targets)} - look at the dot, keep your head still"
-                    " (Esc aborts)",
-                    (30, 40),
+                    text,
+                    (60, height // 2 - 40 + 50 * k),
                     cv2.FONT_HERSHEY_SIMPLEX,
-                    0.8,
-                    (180, 180, 180),
+                    1.0,
+                    (200, 200, 200),
                     2,
                 )
-                cv2.imshow(name, canvas)
-                if (cv2.waitKey(10) & 0xFF) == 27:
-                    aborted = True
-                    break
-                if collecting:
-                    collect(index, (tx, ty))
+            cv2.imshow(name, canvas)
+            key = cv2.waitKey(30) & 0xFF
+            if key == 27:
+                return False
+            if key == ord(" "):
+                return True
+
+    try:
+        for position in range(len(head_positions)):
+            if len(head_positions) > 1 and not wait_for_position(position):
+                aborted = True
+                break
+            aborted = _show_targets(
+                targets,
+                settle_s,
+                dwell_s,
+                width,
+                height,
+                name,
+                lambda i, t, p=position: collect(i, t, p),
+            )
             if aborted:
                 break
     finally:
@@ -436,9 +474,62 @@ def run_calibration(
         cv2.destroyWindow(name)
 
     out_dir.mkdir(parents=True, exist_ok=True)
+    landmarks_file = None
+    if raw["t_ns"] and image_size is not None:
+        landmarks_file = (
+            Recording(
+                np.array(raw["t_ns"], np.int64),
+                np.array(raw["camera"], np.uint8),
+                np.array(raw["target"], np.int16),
+                np.array(raw["position"], np.int16),
+                np.stack(raw["points"]),
+                np.array(targets, float),
+                list(head_positions),
+                image_size,
+            )
+            .save(out_dir)
+            .name
+        )
+    return _calibration_report(
+        samples, out_dir, width, height, grid, targets, aborted, head_positions, landmarks_file
+    )
+
+
+def _show_targets(targets, settle_s, dwell_s, width, height, name, collect) -> bool:
+    """One pass over the targets; returns True when aborted."""
+    for index, (tx, ty) in enumerate(targets):
+        start = time.monotonic()
+        while time.monotonic() - start < settle_s + dwell_s:
+            canvas = np.zeros((height, width, 3), np.uint8)
+            collecting = time.monotonic() - start >= settle_s
+            cv2.circle(canvas, (tx, ty), 18, (0, 0, 255) if not collecting else (0, 255, 0), 2)
+            cv2.circle(canvas, (tx, ty), 3, (255, 255, 255), -1)
+            cv2.putText(
+                canvas,
+                f"target {index + 1}/{len(targets)} - look at the dot, keep your head still"
+                " (Esc aborts)",
+                (30, 40),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.8,
+                (180, 180, 180),
+                2,
+            )
+            cv2.imshow(name, canvas)
+            if (cv2.waitKey(10) & 0xFF) == 27:
+                return True
+            if collecting:
+                collect(index, (tx, ty))
+    return False
+
+
+def _calibration_report(
+    samples, out_dir, width, height, grid, targets, aborted, head_positions, landmarks_file
+) -> dict:
+    # Fit on the first head position only; the others are for testing head compensation.
+    first = [s for s in samples if s.get("head_position", head_positions[0]) == head_positions[0]]
     # Each camera, eye and feature set is fitted on its own: pooling them mixes sources with
     # different biases, which made the first hardware run (2026-11-01) unusable.
-    fits = calibration.fit_sources(samples)
+    fits = calibration.fit_sources(first)
     best = calibration.best_source(fits)
     report: dict = {
         "experimental": True,
@@ -446,6 +537,9 @@ def run_calibration(
         "grid": list(grid),
         "targets": len(targets),
         "aborted": aborted,
+        "head_positions": head_positions,
+        "fitted_on_head_position": head_positions[0],
+        "landmarks_file": landmarks_file,
         "best_source": best,
         "fits": fits,
     }

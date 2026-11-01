@@ -67,6 +67,44 @@ recording (names from `--phases`), `0` clears it.
 be replayed. `sight-diag summarize <run_dir>` recomputes the summary. Recordings stay local;
 `experiments/` and `snapshots/` are git-ignored because they can contain faces.
 
+## Stereo calibration and head-compensated gaze (experimental)
+
+Run in this order on the rig; details and pass criteria are tests S1–S4 in the
+[hardware test plan](../../docs/testing/hardware-test-plan.md).
+
+```bash
+uv run sight-diag stereo board --out board.svg             # print at 100 %, glue onto card
+uv run sight-diag stereo capture -c exp.yaml               # hold the board still in ~20 poses, q solves
+#   -> experiments/<id>/stereo/<time>/stereo_calibration.json (+ the view PNGs, re-solvable:)
+uv run sight-diag stereo solve experiments/<id>/stereo/<time> -c exp.yaml
+uv run sight-diag calibrate -c exp.yaml --grid 4x4 --screen 2048x1152 \
+    --head-positions centre,left,right,up,near             # grid once per head position
+uv run sight-diag gaze evaluate experiments/<id>/calibration/<time> \
+    --stereo <stereo_calibration.json> --screen-mm 510x287 --above 15 --behind 10
+uv run sight-diag gaze live -c exp.yaml --stereo <stereo_calibration.json> \
+    --model experiments/<id>/calibration/<time>/gaze_model_head-ray_deg1.json
+```
+
+| Module | Owns |
+|---|---|
+| `stereo/board.py` | checkerboard spec (`9x6@25`), printable SVG, corner detection and consistent corner order |
+| `stereo/calibrate.py` | intrinsics per camera (k3 fixed), outlier views, extrinsics with fixed intrinsics, `lynx-sight/stereo-calibration/v1` JSON, warnings (swapped cameras, coverage, baseline) |
+| `stereo/capture.py` | live capture: a view is taken when the board is still in both cameras and differs from the views taken |
+| `stereo/rig.py` | rig frame derived from the calibration (origin between the optical centres, X toward cam_right), projection, triangulation |
+| `stereo/head.py` | MediaPipe landmarks of both cameras → 3-D points → head pose against the user's own face template; `iris-in-head/v1` per eye |
+| `stereo/gaze.py` | `head-ray/v1`: iris-in-head → gaze angles in the head (fitted) → turned by the head pose and cast from the eye onto the screen plane |
+| `stereo/evaluate.py` | offline: fit on one head position of a recorded run, test on the others, against the 2-D models |
+| `stereo/live.py` | full-screen dot at the predicted gaze point |
+
+Only the angle mapping is fitted; head movement enters through geometry. In simulation (exact
+cameras, 0.3 px landmark noise, a face model with kappa offsets, not real MediaPipe output) the
+head-ray model fitted with the head centred stays at ~35–50 px median per frame when the head
+moves 6–10 cm or turns 12°, while the 2-D `iris-in-eye` fit grows to 130–380 px. It is
+insensitive to a 25–30 mm error in the assumed screen position. The cameras are not synchronised:
+landmark results of the two cameras are paired by capture time (default ≤ 20 ms apart), which is
+harmless while the eyes fixate. `calibrate` now writes each run to its own timestamped directory
+and keeps every MediaPipe result in `landmarks.npz` (faces as landmark coordinates, no images).
+
 ## How it works
 
 ```
@@ -131,7 +169,7 @@ simulated user, which says nothing about real accuracy.
 ## Develop
 
 ```bash
-uv run pytest            # 95 tests; synthetic and generated data only, no camera needed
+uv run pytest            # 116 tests; synthetic and generated data only, no camera needed
 uv run ruff check . && uv run ruff format --check .
 ```
 
@@ -150,5 +188,8 @@ with the synthetic source. New processing functions implement `process(frame, up
   At 60 cm with a 70° lens, 1280 px across gives roughly 1.5 px/mm, so a 3–5 mm pupil spans only
   about 5–8 px (estimate, to be measured).
 * Raw recordings re-encode to MJPG (lossy); snapshots are lossless PNG.
-* The calibration is a feasibility experiment (polynomial fit without head-pose compensation);
-  no cursor control is implemented.
+* The 2-D calibration is a feasibility experiment without head-pose compensation. The stereo
+  head-ray model compensates head pose but is tested only in simulation; no cursor control is
+  implemented (`gaze live` shows a dot).
+* Stereo needs MediaPipe on both cameras at once; the head pose assumes the user faced the rig
+  squarely while the face template was taken (first head position).

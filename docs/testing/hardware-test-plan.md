@@ -28,6 +28,19 @@ Setup for all tests: `cd software/diagnostic`, `uv sync --extra landmarks`,
 | H15 | Calibration (experimental) | `uv run sight-diag calibrate -c exp.yaml --grid 3x3` | completes; `calibration.json` has train/LOO RMSE | RMSE values |
 | H16 | Lighting | repeat H12 with a desk lamp off/on, window light | where detection breaks down | notes |
 
+### Stereo calibration and head-compensated gaze
+
+Needs MediaPipe (`uv sync --extra landmarks`) and a printed board. Tested only on synthetic data
+so far.
+
+| # | Test | Command | Pass when | Record |
+|---|---|---|---|---|
+| S1 | Board | `uv run sight-diag stereo board --out board.svg`, print at 100 %, glue flat onto card | the bar measures 100 mm; a square measures 25.0 mm (else pass `--board 9x6@<measured>` everywhere) | measured square |
+| S2 | Stereo capture | `uv run sight-diag stereo capture -c exp.yaml`; hold the board at 40–90 cm, all over both images, tilted ±30°, still until a view is taken; ~20 views, `q` | `stereo_calibration.json` written, no warnings | the printed summary: RMS per camera (< 0.5 px good), epipolar error (< 0.5 px), baseline (≈ 257 mm), relative rotation (rig is "parallel": expect < 2°), HFOV (≈ 70°) |
+| S3 | Head positions | `uv run sight-diag calibrate -c exp.yaml --grid 4x4 --settle 1.0 --dwell 2.0 --screen 2048x1152 --head-positions centre,left,right,up,near` (move ~8 cm each way, near ~10 cm closer) | run completes; `landmarks.npz` saved | run directory |
+| S4 | Head compensation | `uv run sight-diag gaze evaluate <run dir> --stereo <S2 json> --screen-mm 510x287 --above <mm> --behind <mm>` (measure the screen's visible area and its offset from the lens axes) | head-ray errors on the moved positions stay near the centre ones; better than the uncompensated rows | `gaze_evaluation.json`: median px/deg per model and head position, head residual, pair skew |
+| S5 | Live dot | `uv run sight-diag gaze live -c exp.yaml --stereo <S2 json> --model <run dir>/gaze_model_head-ray_deg1.json` | the dot follows the gaze and stays put when the head moves while the eyes fixate | notes |
+
 Questions the tests answer, needed before choosing the tracking approach:
 
 1. Which mode both cameras sustain together without drops (the advertised 120 fps is per camera

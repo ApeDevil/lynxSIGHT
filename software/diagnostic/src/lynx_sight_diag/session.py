@@ -17,6 +17,7 @@ from .capture import CaptureStatus, CaptureWorker
 from .config import ExperimentConfig, ProcessorConfig
 from .frames import FrameSlot
 from .processing import Processor, ProcessorRunner, ResultBoard
+from .processing.chessboard import ChessboardProcessor
 from .processing.eyes import EyesProcessor
 from .processing.face import FaceProcessor
 from .processing.landmarks import LandmarksProcessor
@@ -28,6 +29,8 @@ PROCESSORS: dict[str, Callable[..., Processor]] = {
     "face": FaceProcessor,
     "eyes": EyesProcessor,
     "landmarks": LandmarksProcessor,
+    # Only enabled by `sight-diag stereo capture`.
+    "chessboard": ChessboardProcessor,
 }
 
 

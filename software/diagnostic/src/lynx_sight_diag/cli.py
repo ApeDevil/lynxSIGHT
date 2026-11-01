@@ -7,6 +7,7 @@ import json
 import os
 import re
 import sys
+import time
 from pathlib import Path
 
 from . import __version__, config, discovery, models
@@ -177,11 +178,134 @@ def cmd_calibrate(args) -> int:
     cfg = _load_config(args)
     cols, rows = (int(v) for v in args.grid.lower().split("x"))
     screen = tuple(int(v) for v in args.screen.lower().split("x")) if args.screen else None
-    out = Path(cfg.output_dir) / cfg.experiment_id / "calibration"
-    report = run_calibration(Session(cfg), out, (cols, rows), args.settle, args.dwell, screen)
+    if "landmarks" in cfg.processing and args.landmarks_hz:
+        cfg.processing["landmarks"].max_hz = args.landmarks_hz
+    positions = [p.strip() for p in args.head_positions.split(",") if p.strip()]
+    stamp = time.strftime("%Y%m%d-%H%M%S")
+    out = Path(cfg.output_dir) / cfg.experiment_id / "calibration" / stamp
+    report = run_calibration(
+        Session(cfg), out, (cols, rows), args.settle, args.dwell, screen, positions
+    )
     print(json.dumps(report, indent=2))
     print(f"saved to {out}")
     return 0
+
+
+def _size(text: str, what: str) -> tuple[float, float]:
+    match = re.fullmatch(r"\s*(\d+(?:\.\d+)?)\s*x\s*(\d+(?:\.\d+)?)\s*", text or "")
+    if not match:
+        raise ConfigError(f"{what} must look like 510x287, got {text!r}")
+    return float(match[1]), float(match[2])
+
+
+def cmd_stereo(args) -> int:
+    from .stereo.board import Checkerboard, render_image, render_svg
+
+    board = Checkerboard.parse(args.board)
+    if args.action == "board":
+        out = Path(args.out)
+        if out.suffix.lower() == ".svg":
+            out.write_text(render_svg(board, _size(args.paper, "--paper")))
+        else:  # an image, e.g. to show full-screen on a tablet of known pixel pitch
+            cv2_write(out, render_image(board, args.px_per_mm))
+        bw, bh = board.size_mm
+        print(
+            f"wrote {out}: {board.spec}, squares {bw:g} x {bh:g} mm. Print at 100 %, then "
+            "measure one square; pass the measured size with --board if it differs."
+        )
+        return 0
+    if args.action == "solve":
+        from .stereo.capture import solve_directory
+
+        expected = config.load(args.config).baseline_mm if args.config else None
+        result = solve_directory(
+            Path(args.dir), board, expected, args.pitch, Path(args.out) if args.out else None
+        )
+        print(json.dumps(result, indent=2))
+        return 0 if "saved" in result else 1
+    if args.action == "show":
+        from .stereo.calibrate import StereoCalibration
+
+        cal = StereoCalibration.load(args.dir)
+        expected = config.load(args.config).baseline_mm if args.config else None
+        print(json.dumps(cal.summary(expected), indent=2))
+        return 0
+    # capture
+    from .session import Session
+    from .stereo.capture import run_stereo_capture
+
+    cfg = _load_config(args)
+    stamp = time.strftime("%Y%m%d-%H%M%S")
+    out = Path(cfg.output_dir) / cfg.experiment_id / "stereo" / stamp
+    pitch = sum(c.pitch_deg for c in cfg.cameras.values()) / max(1, len(cfg.cameras))
+    result = run_stereo_capture(
+        lambda procs: Session(cfg, processors=procs),
+        out,
+        board,
+        args.views,
+        expected_baseline_mm=cfg.baseline_mm,
+        pitch_deg=pitch,
+    )
+    print(json.dumps(result, indent=2))
+    print(f"\nviews and calibration in {out}")
+    return 0 if "saved" in result else 1
+
+
+def cv2_write(path: Path, image) -> None:
+    import cv2
+
+    if not cv2.imwrite(str(path), image):
+        raise ConfigError(f"could not write {path}")
+
+
+def cmd_gaze(args) -> int:
+    from .stereo.calibrate import load_rig
+
+    if args.action == "live":
+        from .session import Session
+        from .stereo.gaze import HeadRayModel
+        from .stereo.live import run_gaze_preview
+
+        if not args.model:
+            raise ConfigError("gaze live needs --model gaze_model_head-ray_deg1.json")
+        cfg = _load_config(args)
+        cfg.processing["landmarks"].max_hz = args.landmarks_hz
+        for name in ("quality", "face", "eyes"):  # only the landmarks are used
+            cfg.processing[name].enabled = False
+        stats = run_gaze_preview(
+            Session(cfg), load_rig(args.stereo), HeadRayModel.load(args.model), args.max_skew_ms
+        )
+        print(json.dumps(stats, indent=2))
+        return 0
+    if not args.run_dir or not args.screen_mm:
+        raise ConfigError("gaze evaluate needs RUN_DIR and --screen-mm")
+    from .stereo.evaluate import Recording, evaluate, write_report
+    from .stereo.gaze import ScreenPlane
+
+    rec = Recording.load(Path(args.run_dir))
+    size_mm = _size(args.screen_mm, "--screen-mm")
+    size_px = _screen_px(args, rec)
+    screen = ScreenPlane.below_rig(size_mm, size_px, args.above, args.behind)
+    train = rec.positions.index(args.train) if args.train else 0
+    report, models = evaluate(rec, load_rig(args.stereo), screen, train, args.max_skew_ms)
+    report["stereo_calibration"] = str(args.stereo)
+    path = write_report(report, Path(args.run_dir))
+    for degree, model in models.items():
+        model.save(Path(args.run_dir) / f"gaze_model_head-ray_deg{degree}.json")
+    print(json.dumps(report, indent=2))
+    print(f"\nreport: {path}")
+    return 0 if "error" not in report else 1
+
+
+def _screen_px(args, rec) -> tuple[int, int]:
+    if args.screen_px:
+        w, h = _size(args.screen_px, "--screen-px")
+        return int(w), int(h)
+    report = Path(args.run_dir) / "calibration.json"
+    if report.exists():
+        w, h = json.loads(report.read_text())["screen_px"]
+        return int(w), int(h)
+    raise ConfigError("give --screen-px WxH (no calibration.json next to the recording)")
 
 
 def cmd_summarize(args) -> int:
@@ -311,7 +435,71 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--settle", type=float, default=0.8)
     p.add_argument("--dwell", type=float, default=1.5)
     p.add_argument("--screen", help="screen size WxH if auto-detection is wrong")
+    p.add_argument(
+        "--head-positions",
+        default="centre",
+        help="repeat the grid per head position, e.g. centre,left,right,up,near; the first is "
+        "fitted, the others test head compensation (`sight-diag gaze evaluate`)",
+    )
+    p.add_argument(
+        "--landmarks-hz",
+        type=float,
+        default=30.0,
+        help="MediaPipe rate per camera while calibrating (more pairs for stereo)",
+    )
     p.set_defaults(func=cmd_calibrate)
+
+    p = sub.add_parser(
+        "stereo",
+        help="stereo calibration: board, capture, solve, show",
+        description="board: write a printable checkerboard (SVG) or image. capture: live capture "
+        "of still, varied board views from both cameras, then solve. solve: calibrate a capture "
+        "directory again. show: summarise a stereo_calibration.json.",
+    )
+    p.add_argument("action", choices=["board", "capture", "solve", "show"])
+    p.add_argument("dir", nargs="?", help="solve: capture directory; show: calibration file")
+    _add_source_args(p)
+    p.add_argument("--board", default="9x6@25", help="inner corners and square mm (default 9x6@25)")
+    p.add_argument("--out", help="board: file (.svg to print, .png image); solve: calibration file")
+    p.add_argument("--paper", default="297x210", help="board: paper size mm (default A4 landscape)")
+    p.add_argument("--px-per-mm", type=float, default=10.0, help="board: image resolution")
+    p.add_argument("--views", type=int, default=20, help="capture: views to aim for")
+    p.add_argument("--pitch", type=float, default=0.0, help="solve: cameras' mounting pitch, deg")
+    p.set_defaults(func=cmd_stereo)
+
+    p = sub.add_parser(
+        "gaze",
+        help="evaluate gaze models offline on a recorded calibration run",
+        description="evaluate: fit the head-compensated stereo model (head-ray/v1) and the 2-D "
+        "model on one head position of a `calibrate --head-positions ...` run and test them on "
+        "the others; saves the fitted head-ray models. live: full-screen dot at the gaze point "
+        "of a saved model.",
+    )
+    p.add_argument("action", choices=["evaluate", "live"])
+    p.add_argument("run_dir", nargs="?", help="evaluate: calibration run dir (with landmarks.npz)")
+    p.add_argument("--stereo", required=True, help="stereo_calibration.json")
+    p.add_argument("--screen-mm", help="evaluate: visible screen area WxH in mm, measured")
+    p.add_argument("--model", help="live: a gaze_model_head-ray_*.json written by evaluate")
+    p.add_argument("--landmarks-hz", type=float, default=30.0, help="live: MediaPipe rate")
+    _add_source_args(p)
+    p.add_argument("--screen-px", help="screen WxH px (default: from calibration.json)")
+    p.add_argument(
+        "--above",
+        type=float,
+        default=15.0,
+        help="mm from the rig origin (lens axes) down to the screen's top edge",
+    )
+    p.add_argument(
+        "--behind", type=float, default=10.0, help="mm from the lenses back to the screen surface"
+    )
+    p.add_argument("--train", help="head position to fit on (default: the first)")
+    p.add_argument(
+        "--max-skew-ms",
+        type=float,
+        default=20.0,
+        help="max capture-time difference of a left/right landmark pair",
+    )
+    p.set_defaults(func=cmd_gaze)
 
     p = sub.add_parser("summarize", help="recompute summary.json content of a recorded run")
     p.add_argument("run_dir")
